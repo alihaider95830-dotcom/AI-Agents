@@ -1,0 +1,110 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+import redis
+from celery import Task
+from sqlalchemy import create_engine, select
+from sqlalchemy.exc import DBAPIError, OperationalError
+from sqlalchemy.orm import Session, sessionmaker
+
+from backend.core.config import settings
+from backend.core.logging import get_logger
+from backend.db.models import Job, Report, ReportStatus
+from backend.workers.celery_app import celery_app
+from backend.workers.publisher import publish_event
+
+logger = get_logger(__name__)
+
+sync_engine = create_engine(settings.sync_database_url, pool_pre_ping=True)
+SyncSessionLocal = sessionmaker(bind=sync_engine, class_=Session, expire_on_commit=False)
+
+
+# TODO: integrate CrewAI/LangChain agent pipeline
+def run_crew(topic: str, report_type: str) -> str:
+    logger.info("running placeholder crew for report_type=%s", report_type)
+    return "PLACEHOLDER REPORT CONTENT"
+
+
+def _is_transient_error(exc: Exception) -> bool:
+    return isinstance(exc, (OperationalError, DBAPIError, redis.RedisError, TimeoutError))
+
+
+@celery_app.task(
+    bind=True,
+    name="backend.workers.tasks.generate_report",
+    max_retries=settings.celery_task_max_retries,
+    soft_time_limit=settings.celery_task_soft_time_limit,
+    time_limit=settings.celery_task_time_limit,
+)
+def generate_report(self: Task, report_id: str, user_id: str) -> str:
+    del user_id
+    session = SyncSessionLocal()
+    should_commit_on_exit = True
+
+    try:
+        report = session.execute(select(Report).where(Report.id == report_id)).scalar_one()
+        job = session.execute(select(Job).where(Job.report_id == report.id)).scalar_one()
+
+        job.celery_task_id = self.request.id
+        report.status = ReportStatus.RUNNING
+        job.current_agent = "researcher"
+        job.progress_pct = 0
+        session.flush()
+
+        logger.info("report %s started with job %s", report.id, job.id)
+        publish_event(
+            str(job.id),
+            {"agent": "researcher", "pct": 0, "type": "progress"},
+        )
+
+        result = run_crew(report.topic, report.report_type)
+
+        report.status = ReportStatus.DONE
+        report.content_md = result
+        report.word_count = len(result.split())
+        report.completed_at = datetime.now(timezone.utc)
+        job.progress_pct = 100
+        job.current_agent = "writer"
+        logger.info("report %s completed successfully", report.id)
+        publish_event(str(job.id), {"type": "done", "pct": 100})
+        return result
+    except Exception as exc:
+        logger.exception("report generation failed for report_id=%s", report_id)
+
+        report = locals().get("report")
+        job = locals().get("job")
+        if _is_transient_error(exc):
+            countdown = (2 ** self.request.retries) * settings.celery_retry_base_delay_seconds
+            if report is not None:
+                report.status = ReportStatus.PENDING
+            if job is not None:
+                job.current_agent = "retrying"
+                job.error_message = None
+                publish_event(
+                    str(job.id),
+                    {"type": "retry", "message": str(exc), "retry_in": countdown},
+                )
+            logger.warning(
+                "retrying report generation for report_id=%s in %s seconds",
+                report_id,
+                countdown,
+            )
+            session.commit()
+            should_commit_on_exit = False
+            raise self.retry(exc=exc, countdown=countdown)
+
+        if report is not None:
+            report.status = ReportStatus.FAILED
+        if job is not None:
+            job.error_message = str(exc)
+            publish_event(
+                str(job.id),
+                {"type": "error", "message": str(exc)},
+            )
+
+        raise
+    finally:
+        if should_commit_on_exit:
+            session.commit()
+        session.close()
