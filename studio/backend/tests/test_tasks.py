@@ -62,10 +62,12 @@ def test_generate_report_success(monkeypatch, fake_entities):
     monkeypatch.setattr(tasks, "publish_event", publisher)
     monkeypatch.setattr(tasks, "run_crew", lambda topic, report_type: "PLACEHOLDER REPORT CONTENT")
     retry = Mock(side_effect=AssertionError("retry should not be called"))
-    monkeypatch.setattr(tasks.generate_report, "request", SimpleNamespace(id="celery-1", retries=0), raising=False)
-    monkeypatch.setattr(tasks.generate_report, "retry", retry, raising=False)
-
-    result = tasks.generate_report.run("report-1", "user-1")
+    monkeypatch.setattr(tasks.generate_report, "retry", retry)
+    tasks.generate_report.push_request(id="celery-1", retries=0)
+    try:
+        result = tasks.generate_report.run("report-1", "user-1")
+    finally:
+        tasks.generate_report.pop_request()
 
     assert result == "PLACEHOLDER REPORT CONTENT"
     assert report.status == ReportStatus.DONE
@@ -85,11 +87,13 @@ def test_generate_report_failure(monkeypatch, fake_entities):
 
     monkeypatch.setattr(tasks, "run_crew", raise_error)
     retry = Mock(side_effect=AssertionError("retry should not be called"))
-    monkeypatch.setattr(tasks.generate_report, "request", SimpleNamespace(id="celery-2", retries=0), raising=False)
-    monkeypatch.setattr(tasks.generate_report, "retry", retry, raising=False)
-
-    with pytest.raises(ValueError):
-        tasks.generate_report.run("report-1", "user-1")
+    monkeypatch.setattr(tasks.generate_report, "retry", retry)
+    tasks.generate_report.push_request(id="celery-2", retries=0)
+    try:
+        with pytest.raises(ValueError):
+            tasks.generate_report.run("report-1", "user-1")
+    finally:
+        tasks.generate_report.pop_request()
 
     assert report.status == ReportStatus.FAILED
     assert job.error_message == "boom"
@@ -108,11 +112,13 @@ def test_generate_report_retries(monkeypatch, fake_entities):
 
     monkeypatch.setattr(tasks, "run_crew", raise_timeout)
     retry = Mock(side_effect=RuntimeError("retry requested"))
-    monkeypatch.setattr(tasks.generate_report, "request", SimpleNamespace(id="celery-3", retries=2), raising=False)
-    monkeypatch.setattr(tasks.generate_report, "retry", retry, raising=False)
-
-    with pytest.raises(RuntimeError, match="retry requested"):
-        tasks.generate_report.run("report-1", "user-1")
+    monkeypatch.setattr(tasks.generate_report, "retry", retry)
+    tasks.generate_report.push_request(id="celery-3", retries=2)
+    try:
+        with pytest.raises(RuntimeError, match="retry requested"):
+            tasks.generate_report.run("report-1", "user-1")
+    finally:
+        tasks.generate_report.pop_request()
 
     retry.assert_called_once()
     assert retry.call_args.kwargs["countdown"] == 20

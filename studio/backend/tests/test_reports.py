@@ -183,7 +183,7 @@ async def client(fake_db, fake_user):
     app.dependency_overrides[get_current_active_user] = override_get_current_user
 
     async with AsyncClient(
-        transport=ASGITransport(app=app),
+        transport=ASGITransport(app=app, raise_app_exceptions=False),
         base_url="http://testserver",
     ) as async_client:
         yield async_client

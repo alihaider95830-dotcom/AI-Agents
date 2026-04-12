@@ -13,6 +13,8 @@ from backend.api.v1.router import api_v1_router
 from backend.core.config import settings
 from backend.core.exceptions import StudioException
 from backend.core.logging import get_logger
+from backend.core.middleware import TimeoutMiddleware
+from backend.core.redis_client import close_pools
 
 logger = get_logger("studio.api")
 allowed_origins = [str(settings.frontend_url)] if settings.frontend_url else []
@@ -23,6 +25,7 @@ async def lifespan(_: FastAPI):
     logger.info("Studio API started")
     yield
     logger.info("Studio API stopped")
+    await close_pools()
 
 
 app = FastAPI(title="Studio API", lifespan=lifespan)
@@ -34,6 +37,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(TimeoutMiddleware)
 
 app.include_router(api_v1_router)
 

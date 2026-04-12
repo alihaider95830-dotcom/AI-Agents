@@ -18,7 +18,9 @@ class Settings(BaseSettings):
     celery_task_soft_time_limit: int = 540
     celery_task_max_retries: int = 3
     celery_retry_base_delay_seconds: int = 5
-    stream_keepalive_timeout_seconds: int = 30
+    stream_keepalive_timeout_seconds: int = 20
+    event_store_ttl_seconds: int = 3600
+    request_timeout_seconds: int = 30
 
     model_config = SettingsConfigDict(
         env_file=".env",
