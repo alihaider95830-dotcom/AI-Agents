@@ -2,6 +2,7 @@ import json
 import uuid
 from datetime import datetime, timezone
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 import pytest_asyncio
@@ -79,6 +80,8 @@ async def client(fake_user, monkeypatch):
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_current_active_user] = override_get_current_user
+    monkeypatch.setattr(stream_route, "async_get_events", AsyncMock(return_value=[]))
+    monkeypatch.setattr(stream_route, "get_current_user", AsyncMock(return_value=fake_user))
 
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -98,7 +101,11 @@ async def test_stream_receives_events(client, monkeypatch) -> None:
         lambda: FakePubSub([{"type": "progress", "pct": 10}, {"type": "done", "pct": 100}]),
     )
 
-    async with async_client.stream("GET", f"/api/v1/stream/{job_id}") as response:
+    async with async_client.stream(
+        "GET",
+        f"/api/v1/stream/{job_id}",
+        headers={"Authorization": "Bearer test-token"},
+    ) as response:
         body = ""
         async for chunk in response.aiter_text():
             body += chunk
@@ -114,7 +121,11 @@ async def test_stream_closes_on_done(client, monkeypatch) -> None:
     pubsub = FakePubSub([{"type": "done", "pct": 100}])
     monkeypatch.setattr(stream_route, "_create_pubsub", lambda: pubsub)
 
-    async with async_client.stream("GET", f"/api/v1/stream/{job_id}") as response:
+    async with async_client.stream(
+        "GET",
+        f"/api/v1/stream/{job_id}",
+        headers={"Authorization": "Bearer test-token"},
+    ) as response:
         body = ""
         async for chunk in response.aiter_text():
             body += chunk
@@ -131,7 +142,9 @@ async def test_stream_wrong_user(client, monkeypatch) -> None:
     async_client, _ = client
     monkeypatch.setattr(stream_route, "_create_pubsub", lambda: FakePubSub([]))
 
-    response = await async_client.get(f"/api/v1/stream/{uuid.uuid4()}")
+    response = await async_client.get(
+        f"/api/v1/stream/{uuid.uuid4()}",
+        headers={"Authorization": "Bearer test-token"},
+    )
 
     assert response.status_code == 403
-

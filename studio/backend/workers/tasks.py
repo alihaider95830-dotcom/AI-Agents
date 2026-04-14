@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.exc import DBAPIError, OperationalError
 from sqlalchemy.orm import Session, sessionmaker
 
+from backend.core.credits import refund_sync
 from backend.core.config import settings
 from backend.core.logging import get_logger
 from backend.db.models import Job, Report, ReportStatus
@@ -38,7 +39,6 @@ def _is_transient_error(exc: Exception) -> bool:
     time_limit=settings.celery_task_time_limit,
 )
 def generate_report(self: Task, report_id: str, user_id: str) -> str:
-    del user_id
     session = SyncSessionLocal()
     should_commit_on_exit = True
 
@@ -102,6 +102,23 @@ def generate_report(self: Task, report_id: str, user_id: str) -> str:
                 str(job.id),
                 {"type": "error", "message": str(exc)},
             )
+
+        refund_session = SyncSessionLocal()
+        try:
+            refund_sync(user_id, report_id, refund_session)
+            logger.info(
+                "refunded credit for failed report_id=%s user_id=%s",
+                report_id,
+                user_id,
+            )
+        except Exception:
+            logger.exception(
+                "failed to refund credit for failed report_id=%s user_id=%s",
+                report_id,
+                user_id,
+            )
+        finally:
+            refund_session.close()
 
         raise
     finally:

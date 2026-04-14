@@ -9,8 +9,12 @@ class Settings(BaseSettings):
     supabase_service_key: str | None = None
     supabase_anon_key: str | None = None
     secret_key: str | None = None
+    admin_api_key: str | None = None
+    openai_api_key: str | None = None
+    anthropic_api_key: str | None = None
     database_url: str
     redis_url: str
+    vector_store_path: str = "./data/faiss_index"
     frontend_url: AnyHttpUrl | None = None
     log_level: str = "INFO"
     celery_queue_name: str = "studio_tasks"

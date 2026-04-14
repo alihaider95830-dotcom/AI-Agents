@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.api.deps import get_current_active_user, get_db
+from backend.api.deps import get_current_active_user, get_db, rate_limit_generate
 from backend.api.v1.schemas.reports import (
     ReportCreate,
     ReportCreateResponse,
@@ -13,8 +13,9 @@ from backend.api.v1.schemas.reports import (
     ReportListItem,
     ReportListResponse,
 )
-from backend.core.exceptions import InsufficientCreditsError, NotFoundError
-from backend.db.models import Job, Report, ReportStatus, UsageLog, User
+from backend.core.credits import check_and_deduct
+from backend.core.exceptions import NotFoundError
+from backend.db.models import Job, Report, ReportStatus, User
 from backend.workers.tasks import generate_report
 
 router = APIRouter()
@@ -61,22 +62,21 @@ async def _get_user_report(
     return result.scalar_one_or_none()
 
 
-@router.post("/reports", response_model=ReportCreateResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/reports",
+    response_model=ReportCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit_generate)],
+)
 async def create_report(
     payload: ReportCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> ReportCreateResponse:
-    locked_user_result = await db.execute(
-        select(User).where(User.id == current_user.id).with_for_update()
-    )
-    locked_user = locked_user_result.scalar_one()
-
-    if locked_user.credits_remaining <= 0:
-        raise InsufficientCreditsError()
+    await check_and_deduct(current_user, db)
 
     report = Report(
-        user_id=locked_user.id,
+        user_id=current_user.id,
         title=payload.topic[:255],
         topic=payload.topic,
         report_type=payload.report_type,
@@ -89,18 +89,9 @@ async def create_report(
     db.add(job)
     await db.flush()
 
-    locked_user.credits_remaining -= 1
-    usage_log = UsageLog(
-        user_id=locked_user.id,
-        report_id=report.id,
-        action="generate_report",
-        delta=-1,
-    )
-    db.add(usage_log)
-
     try:
         celery_result = generate_report.apply_async(
-            args=[str(report.id), str(locked_user.id)],
+            args=[str(report.id), str(current_user.id)],
             countdown=1,
         )
         job.celery_task_id = celery_result.id
@@ -108,8 +99,6 @@ async def create_report(
     except Exception:
         await db.rollback()
         raise
-
-    current_user.credits_remaining = locked_user.credits_remaining
     await db.refresh(report)
     await db.refresh(job)
 

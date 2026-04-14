@@ -22,6 +22,10 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 
+def _create_pubsub():
+    return get_async_redis().pubsub()
+
+
 async def _job_belongs_to_user(
     db: AsyncSession,
     job_id: UUID,
@@ -74,8 +78,7 @@ async def _event_stream(
         return
 
     # 3. Subscribe to pubsub
-    client = get_async_redis()
-    pubsub = client.pubsub()
+    pubsub = _create_pubsub()
     channel = f"job:{job_id}"
     await pubsub.subscribe(channel)
 

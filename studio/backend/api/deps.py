@@ -1,7 +1,10 @@
-from fastapi import Depends
+from fastapi import Depends, Request
+from redis.asyncio.client import Redis
 
 from backend.core.auth import get_current_user
 from backend.core.exceptions import ForbiddenError
+from backend.core.rate_limit import generate_limiter, global_limiter
+from backend.core.redis_client import get_async_redis
 from backend.db.models import User
 from backend.db.session import get_db
 
@@ -19,3 +22,20 @@ async def get_current_active_user(
         raise ForbiddenError("User is not active")
     return user
 
+
+async def get_redis() -> Redis:
+    return get_async_redis()
+
+
+async def rate_limit_generate(
+    request: Request,
+    redis: Redis = Depends(get_redis),
+) -> None:
+    await generate_limiter(request, redis)
+
+
+async def rate_limit_global(
+    request: Request,
+    redis: Redis = Depends(get_redis),
+) -> None:
+    await global_limiter(request, redis)

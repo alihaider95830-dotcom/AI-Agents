@@ -47,6 +47,7 @@ class FakeSession:
         self.jobs = {}
         self.users = {}
         self.usage_logs = []
+        self._pending_users = {}
         self._pending_reports = {}
         self._pending_jobs = {}
         self._pending_usage_logs = []
@@ -99,6 +100,8 @@ class FakeSession:
         if hasattr(instance, "action"):
             # UsageLog
             self._pending_usage_logs.append(instance)
+        elif hasattr(instance, "email") and hasattr(instance, "credits_remaining"):
+            self._pending_users[instance.id] = instance
         elif hasattr(instance, "report_id"):
             if instance.id is None:
                 instance.id = uuid.uuid4()
@@ -116,9 +119,11 @@ class FakeSession:
         return None
 
     async def commit(self):
+        self.users.update(self._pending_users)
         self.reports.update(self._pending_reports)
         self.jobs.update(self._pending_jobs)
         self.usage_logs.extend(self._pending_usage_logs)
+        self._pending_users.clear()
         self._pending_reports.clear()
         self._pending_jobs.clear()
         self._pending_usage_logs.clear()
@@ -129,6 +134,7 @@ class FakeSession:
         for user_id, credits_remaining in self._credit_snapshots.items():
             if user_id in self.users:
                 self.users[user_id].credits_remaining = credits_remaining
+        self._pending_users.clear()
         self._pending_reports.clear()
         self._pending_jobs.clear()
         self._pending_usage_logs.clear()
