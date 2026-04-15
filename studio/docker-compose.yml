@@ -33,6 +33,7 @@ services:
     build:
       context: .
       dockerfile: ./workers/Dockerfile
+    command: celery -A backend.workers.celery_app worker --beat --loglevel=info --queues=${CELERY_QUEUE_NAME:-studio_tasks}
     restart: unless-stopped
     env_file:
       - .env

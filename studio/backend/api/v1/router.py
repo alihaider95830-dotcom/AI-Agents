@@ -6,6 +6,7 @@ from backend.api.v1.routes.admin import router as admin_router
 from backend.api.v1.routes.billing import router as billing_router
 from backend.api.v1.routes.health import router as health_router
 from backend.api.v1.routes.jobs import router as jobs_router
+from backend.api.v1.routes.knowledge import router as knowledge_router
 from backend.api.v1.routes.reports import router as reports_router
 from backend.api.v1.routes.stream import router as stream_router
 
@@ -19,4 +20,5 @@ api_v1_router.include_router(reports_router, tags=["reports"])
 api_v1_router.include_router(jobs_router, tags=["jobs"])
 api_v1_router.include_router(billing_router, tags=["billing"])
 api_v1_router.include_router(admin_router, tags=["admin"])
+api_v1_router.include_router(knowledge_router, tags=["knowledge"])
 api_v1_router.include_router(stream_router, tags=["stream"])

@@ -1,4 +1,5 @@
-from contextlib import asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
 from time import perf_counter
 
 from fastapi import Depends, FastAPI, Request
@@ -15,15 +16,30 @@ from backend.core.exceptions import StudioException
 from backend.core.logging import get_logger
 from backend.core.middleware import TimeoutMiddleware
 from backend.core.redis_client import close_pools
+from backend.db.session import AsyncSessionLocal
+from backend.tools.warmup import warm_vector_stores
 
 logger = get_logger("studio.api")
 allowed_origins = [str(settings.frontend_url)] if settings.frontend_url else []
 
 
+async def _warm_vector_stores_background() -> None:
+    try:
+        async with AsyncSessionLocal() as session:
+            await warm_vector_stores(session)
+    except Exception as exc:
+        logger.warning("Vector store warmup failed: %s", exc)
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     logger.info("Studio API started")
+    warmup_task = asyncio.create_task(_warm_vector_stores_background())
     yield
+    if not warmup_task.done():
+        warmup_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await warmup_task
     logger.info("Studio API stopped")
     await close_pools()
 

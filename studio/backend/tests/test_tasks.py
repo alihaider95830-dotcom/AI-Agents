@@ -96,6 +96,7 @@ def test_generate_report_failure(monkeypatch, fake_entities):
         tasks.generate_report.pop_request()
 
     assert report.status == ReportStatus.FAILED
+    assert report.completed_at is not None
     assert job.error_message == "boom"
     assert publisher.call_args_list[-1].args[1]["type"] == "error"
 

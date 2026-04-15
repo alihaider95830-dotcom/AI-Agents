@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import httpx
@@ -12,12 +11,10 @@ from backend.tools.chunker import MIN_CHUNK_TOKEN_COUNT, TextChunker
 from backend.tools.extractor import DataExtractor
 from backend.tools.scraper import ScraperTool, SCRAPER_REMOVABLE_TAGS
 from backend.tools.search import SearchTool
-from backend.tools.vector_store import VectorStore
 
 SEARCH_QUERY_COUNT = 3
 SEARCH_RESULTS_PER_QUERY = 2
 SCRAPER_TEST_URL_COUNT = 4
-VECTOR_STORE_TEST_K = 5
 
 
 def _mock_search_results() -> list[dict[str, str]]:
@@ -309,65 +306,6 @@ def test_extract_competitor_mentions_excludes_zero_count() -> None:
     assert "Google" not in results
 
 
-def test_add_chunks_creates_index(tmp_path: Path) -> None:
-    with patch("backend.tools.vector_store.OpenAIEmbeddings") as embeddings_cls, patch(
-        "backend.tools.vector_store.FAISS"
-    ) as faiss_cls:
-        store = VectorStore()
-        store.index_path = tmp_path / "test-index"
-        faiss_index = Mock()
-        faiss_index.save_local = Mock()
-        faiss_cls.from_documents.return_value = faiss_index
-
-        added_count = store.add_chunks(
-            [{"text": "chunk one", "metadata": {"url": "https://example.com"}}]
-        )
-
-    embeddings_cls.assert_called_once()
-    faiss_cls.from_documents.assert_called_once()
-    assert store.index is faiss_index
-    assert added_count == 1
-
-
-def test_search_returns_ranked_results(tmp_path: Path) -> None:
-    with patch("backend.tools.vector_store.OpenAIEmbeddings"):
-        store = VectorStore()
-        store.index_path = tmp_path / "ranked-index"
-        first_doc = Mock(page_content="Less relevant", metadata={"url": "https://a.com"})
-        second_doc = Mock(page_content="More relevant", metadata={"url": "https://b.com"})
-        store.index = Mock()
-        store.index.similarity_search_with_score.return_value = [
-            (first_doc, 0.8),
-            (second_doc, 0.2),
-        ]
-
-        results = store.search("query", k=VECTOR_STORE_TEST_K)
-
-    assert [item["score"] for item in results] == [0.2, 0.8]
-    assert results[0]["text"] == "More relevant"
-
-
-def test_search_empty_index_returns_empty_list() -> None:
-    with patch("backend.tools.vector_store.OpenAIEmbeddings"):
-        store = VectorStore()
-
-    assert store.search("query") == []
-
-
-def test_clear_deletes_index(tmp_path: Path) -> None:
-    with patch("backend.tools.vector_store.OpenAIEmbeddings"):
-        store = VectorStore()
-        store.index_path = tmp_path / "clear-index"
-        store.index_path.mkdir(parents=True)
-        (store.index_path / "index.faiss").write_text("placeholder", encoding="utf-8")
-        store.index = Mock()
-
-        store.clear()
-
-    assert store.index is None
-    assert not store.index_path.exists()
-
-
 def test_research_topic_end_to_end() -> None:
     search_tool = Mock()
     scraper = Mock()
@@ -395,7 +333,7 @@ def test_research_topic_end_to_end() -> None:
     with patch.object(pipeline_module, "SearchTool", return_value=search_tool), patch.object(
         pipeline_module, "ScraperTool", return_value=scraper
     ), patch.object(pipeline_module, "TextChunker", return_value=chunker), patch.object(
-        pipeline_module, "VectorStore", return_value=vector_store
+        pipeline_module.store_manager, "get", return_value=vector_store
     ), patch.object(pipeline_module, "DataExtractor", return_value=extractor):
         result = pipeline_module.research_topic(
             "on-device AI",
@@ -430,7 +368,7 @@ def test_research_topic_closes_scraper_on_error() -> None:
     with patch.object(pipeline_module, "SearchTool", return_value=search_tool), patch.object(
         pipeline_module, "ScraperTool", return_value=scraper
     ), patch.object(pipeline_module, "TextChunker", return_value=chunker), patch.object(
-        pipeline_module, "VectorStore", return_value=vector_store
+        pipeline_module.store_manager, "get", return_value=vector_store
     ), patch.object(pipeline_module, "DataExtractor", return_value=extractor):
         with pytest.raises(RuntimeError, match="search failed"):
             pipeline_module.research_topic("on-device AI", "market_analysis", "job-123")

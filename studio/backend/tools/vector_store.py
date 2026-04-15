@@ -10,51 +10,87 @@ from pydantic import ConfigDict, Field
 
 from backend.core.config import settings
 from backend.core.logging import get_logger
+from backend.tools.embeddings import get_embeddings
 
 try:
     from langchain_community.vectorstores import FAISS
 except ImportError:  # pragma: no cover - exercised via patched tests/fallback runtime
     FAISS = None
 
-try:
-    from langchain_openai import OpenAIEmbeddings
-except ImportError:  # pragma: no cover - exercised via patched tests/fallback runtime
-    OpenAIEmbeddings = None
-
 VECTOR_STORE_DEFAULT_INDEX_NAME = "default"
-VECTOR_STORE_EMBEDDING_MODEL = "text-embedding-3-small"
 VECTOR_STORE_SEARCH_K = 5
 VECTOR_STORE_SEARCH_MANY_MULTIPLIER = 2
+VECTOR_STORE_INDEX_FILE_GLOB = "*"
+VECTOR_STORE_DISK_RELOAD_MESSAGE = "Detected index change on disk for %s; reloading"
 
 
 class VectorStore:
     def __init__(self, index_name: str = VECTOR_STORE_DEFAULT_INDEX_NAME):
+        self.index_name = index_name
         self.index_path = Path(settings.vector_store_path) / index_name
         self.logger = get_logger(__name__)
-        if not settings.openai_api_key:
-            raise RuntimeError("OPENAI_API_KEY is required for VectorStore")
-        if OpenAIEmbeddings is None:
-            raise RuntimeError("langchain-openai is required for VectorStore")
-        self.embeddings = OpenAIEmbeddings(
-            openai_api_key=settings.openai_api_key,
-            model=VECTOR_STORE_EMBEDDING_MODEL,
-        )
+        self.embeddings = get_embeddings()
         self.index: Any | None = None
+        self._loaded_signature: tuple[tuple[str, int, int], ...] | None = None
+
+    def _has_index_files(self, path: Path | None = None) -> bool:
+        target_path = path or self.index_path
+        return target_path.exists() and any(target_path.iterdir())
+
+    def _index_signature(
+        self,
+        path: Path | None = None,
+    ) -> tuple[tuple[str, int, int], ...] | None:
+        target_path = path or self.index_path
+        if not self._has_index_files(target_path):
+            return None
+
+        return tuple(
+            sorted(
+                (
+                    str(file_path.relative_to(target_path)),
+                    int(file_path.stat().st_size),
+                    int(file_path.stat().st_mtime_ns),
+                )
+                for file_path in target_path.rglob(VECTOR_STORE_INDEX_FILE_GLOB)
+                if file_path.is_file()
+            )
+        )
+
+    def _remember_disk_state(self) -> None:
+        self._loaded_signature = self._index_signature()
+
+    def _index_size_bytes(self) -> int | None:
+        if not self._has_index_files():
+            return None
+
+        return sum(
+            file_path.stat().st_size
+            for file_path in self.index_path.rglob(VECTOR_STORE_INDEX_FILE_GLOB)
+            if file_path.is_file()
+        )
+
+    def _vector_count(self) -> int:
+        if self.index is None:
+            raise ValueError("Index is not loaded")
+        return int(self.index.index.ntotal)
 
     def load_or_create(self) -> None:
         if FAISS is None:
             raise RuntimeError("langchain-community is required for VectorStore")
 
-        if self.index_path.exists() and any(self.index_path.iterdir()):
+        if self._has_index_files():
             self.index = FAISS.load_local(
                 str(self.index_path),
                 self.embeddings,
                 allow_dangerous_deserialization=True,
             )
+            self._remember_disk_state()
             self.logger.info("Loaded existing FAISS index from %s", self.index_path)
             return
 
         self.index = None
+        self._loaded_signature = None
         self.logger.info("No existing index found, will create on first add")
 
     def add_chunks(self, chunks: list[dict]) -> int:
@@ -76,6 +112,7 @@ class VectorStore:
         else:
             self.index.add_documents(documents)
         self.index.save_local(str(self.index_path))
+        self._remember_disk_state()
         self.logger.info(
             "Added %s chunks. Index saved to %s",
             len(chunks),
@@ -115,8 +152,72 @@ class VectorStore:
         merged_results.sort(key=lambda item: item["score"])
         return merged_results[: k * VECTOR_STORE_SEARCH_MANY_MULTIPLIER]
 
+    def refresh_if_stale(self) -> bool:
+        current_signature = self._index_signature()
+        if current_signature == self._loaded_signature:
+            return False
+
+        self.logger.info(VECTOR_STORE_DISK_RELOAD_MESSAGE, self.index_name)
+        self.load_or_create()
+        return True
+
+    def health_check(self) -> dict[str, Any]:
+        try:
+            return {
+                "index_name": self.index_name,
+                "loaded": self.index is not None,
+                "index_path": str(self.index_path),
+                "index_exists_on_disk": self._has_index_files(),
+                "vector_count": self._vector_count() if self.index is not None else None,
+                "index_size_bytes": self._index_size_bytes(),
+            }
+        except Exception as exc:  # pragma: no cover - exercised via tests with broken index objects
+            return {"loaded": False, "error": str(exc)}
+
+    def merge(self, other_index_name: str) -> int:
+        if self.index is None:
+            raise ValueError("Current index is not loaded")
+
+        other_store = VectorStore(other_index_name)
+        other_store.load_or_create()
+        if other_store.index is None:
+            raise ValueError("Other index is not loaded")
+
+        self.index.merge_from(other_store.index)
+        self.index_path.mkdir(parents=True, exist_ok=True)
+        self.index.save_local(str(self.index_path))
+        self._remember_disk_state()
+
+        vector_count = self._vector_count()
+        self.logger.info(
+            "Merged index %s into %s. Total vectors: %s",
+            other_index_name,
+            self.index_path,
+            vector_count,
+        )
+        return vector_count
+
+    def get_all_metadata(self) -> list[dict[str, Any]]:
+        if self.index is None:
+            return []
+
+        return [
+            dict(getattr(document, "metadata", {}) or {})
+            for document in self.index.docstore._dict.values()
+        ]
+
+    def list_sources(self) -> list[str]:
+        return sorted(
+            {
+                str(metadata["url"])
+                for metadata in self.get_all_metadata()
+                if metadata.get("url")
+            }
+        )
+
     def clear(self) -> None:
         self.index = None
+        self._loaded_signature = None
         if self.index_path.exists():
             shutil.rmtree(self.index_path)
         self.logger.info("Index cleared")

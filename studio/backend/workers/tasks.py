@@ -96,6 +96,7 @@ def generate_report(self: Task, report_id: str, user_id: str) -> str:
 
         if report is not None:
             report.status = ReportStatus.FAILED
+            report.completed_at = datetime.now(timezone.utc)
         if job is not None:
             job.error_message = str(exc)
             publish_event(

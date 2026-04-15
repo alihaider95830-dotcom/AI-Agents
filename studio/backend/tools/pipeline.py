@@ -5,7 +5,7 @@ from backend.tools.chunker import TextChunker
 from backend.tools.extractor import DataExtractor
 from backend.tools.scraper import ScraperTool
 from backend.tools.search import SearchTool
-from backend.tools.vector_store import VectorStore
+from backend.tools.store_manager import store_manager
 
 logger = get_logger(__name__)
 
@@ -28,11 +28,9 @@ def research_topic(
     scraper = ScraperTool()
     chunker = TextChunker()
     extractor = DataExtractor()
-    vector_store = VectorStore(index_name=job_id)
+    vector_store = store_manager.get(job_id, auto_load=True)
 
     try:
-        vector_store.load_or_create()
-
         queries = [
             topic,
             f"{topic} {MARKET_ANALYSIS_SUFFIX}",
