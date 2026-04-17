@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+body {
+  @apply min-h-screen bg-brand-sand text-slate-900 antialiased transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100;
+  background-image:
+    radial-gradient(circle at top left, rgba(212, 163, 115, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(43, 95, 117, 0.16), transparent 26%);
+}
+
+a {
+  @apply transition-colors duration-200;
+}
+
+::selection {
+  @apply bg-brand-gold/30 text-slate-950 dark:text-slate-50;
+}
+
+.prose-report {
+  @apply text-sm leading-7 text-slate-600 dark:text-slate-300;
+}
+
+.prose-report h1,
+.prose-report h2,
+.prose-report h3,
+.prose-report h4 {
+  @apply font-[var(--font-heading)] text-slate-900 dark:text-white;
+}
+
+.prose-report h1 {
+  @apply text-3xl;
+}
+
+.prose-report h2 {
+  @apply mt-8 text-2xl;
+}
+
+.prose-report h3 {
+  @apply mt-6 text-xl;
+}
+
+.prose-report p,
+.prose-report ul,
+.prose-report ol,
+.prose-report blockquote {
+  @apply my-4;
+}
+
+.prose-report ul,
+.prose-report ol {
+  @apply pl-6;
+}
+
+.prose-report ul {
+  @apply list-disc;
+}
+
+.prose-report ol {
+  @apply list-decimal;
+}
+
+.prose-report li {
+  @apply my-1;
+}
+
+.prose-report code {
+  @apply rounded bg-slate-200/70 px-1.5 py-0.5 text-[0.9em] text-brand-ink dark:bg-slate-800 dark:text-brand-mist;
+}
+
+.prose-report pre {
+  @apply overflow-x-auto rounded-2xl bg-slate-900 p-4 text-slate-100;
+}
+
+.prose-report pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+
+.prose-report a {
+  @apply font-medium text-brand-ocean underline decoration-brand-ocean/30 underline-offset-4 dark:text-brand-gold;
+}
+
+.prose-report strong {
+  @apply text-slate-900 dark:text-white;
+}

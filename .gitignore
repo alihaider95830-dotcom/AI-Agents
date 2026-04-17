@@ -1,2 +1,14 @@
 venv/
 __pycache__/
+.crewai/
+.crewai_test/
+.pnpm-store/
+.pytest_cache/
+studio/.crewai/
+studio/.pytest_cache/
+studio/.env
+studio/frontend/.corepack/
+studio/frontend/.next/
+studio/frontend/.swc/
+studio/frontend/node_modules/
+studio/frontend/.env.local
