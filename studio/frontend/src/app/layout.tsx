@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Source_Sans_3 } from "next/font/google";
 
 import "@/app/globals.css";
+import { PaymentWarningBoundary } from "@/components/billing/PaymentWarningBoundary";
 import { Providers } from "@/components/providers/Providers";
 
 const headingFont = Space_Grotesk({
@@ -31,7 +32,10 @@ export default function RootLayout({
       <body
         className={`${headingFont.variable} ${bodyFont.variable} font-[var(--font-body)]`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <PaymentWarningBoundary />
+          {children}
+        </Providers>
       </body>
     </html>
   );

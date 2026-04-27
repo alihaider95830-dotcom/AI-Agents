@@ -8,6 +8,16 @@ from backend.db.models import ReportStatus
 from backend.workers import tasks
 
 
+def test_run_crew_returns_markdown_from_agent_pipeline(monkeypatch):
+    pipeline = Mock(return_value=SimpleNamespace(markdown_output="# Real report"))
+    monkeypatch.setattr(tasks, "_run_agent_pipeline", pipeline)
+
+    result = tasks.run_crew("A valid report topic", "market_analysis", job_id="job-1")
+
+    assert result == "# Real report"
+    pipeline.assert_called_once_with("A valid report topic", job_id="job-1")
+
+
 class FakeSyncSession:
     def __init__(self, report, job):
         self.report = report
@@ -60,7 +70,11 @@ def test_generate_report_success(monkeypatch, fake_entities):
     monkeypatch.setattr(tasks, "SyncSessionLocal", lambda: session)
     publisher = Mock()
     monkeypatch.setattr(tasks, "publish_event", publisher)
-    monkeypatch.setattr(tasks, "run_crew", lambda topic, report_type: "PLACEHOLDER REPORT CONTENT")
+    monkeypatch.setattr(
+        tasks,
+        "run_crew",
+        lambda topic, report_type, job_id=None: "# Generated report",
+    )
     retry = Mock(side_effect=AssertionError("retry should not be called"))
     monkeypatch.setattr(tasks.generate_report, "retry", retry)
     tasks.generate_report.push_request(id="celery-1", retries=0)
@@ -69,8 +83,10 @@ def test_generate_report_success(monkeypatch, fake_entities):
     finally:
         tasks.generate_report.pop_request()
 
-    assert result == "PLACEHOLDER REPORT CONTENT"
+    assert result == "# Generated report"
     assert report.status == ReportStatus.DONE
+    assert report.content_md == "# Generated report"
+    assert report.word_count == 3
     assert job.progress_pct == 100
     assert publisher.call_args_list[-1].args[1]["type"] == "done"
 
@@ -82,7 +98,7 @@ def test_generate_report_failure(monkeypatch, fake_entities):
     publisher = Mock()
     monkeypatch.setattr(tasks, "publish_event", publisher)
 
-    def raise_error(topic, report_type):
+    def raise_error(topic, report_type, job_id=None):
         raise ValueError("boom")
 
     monkeypatch.setattr(tasks, "run_crew", raise_error)
@@ -108,7 +124,7 @@ def test_generate_report_retries(monkeypatch, fake_entities):
     publisher = Mock()
     monkeypatch.setattr(tasks, "publish_event", publisher)
 
-    def raise_timeout(topic, report_type):
+    def raise_timeout(topic, report_type, job_id=None):
         raise TimeoutError("temporary issue")
 
     monkeypatch.setattr(tasks, "run_crew", raise_timeout)

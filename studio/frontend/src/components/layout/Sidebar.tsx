@@ -26,7 +26,7 @@ const navigationItems = [
     label: "Generate",
   },
   {
-    href: "/reports",
+    href: "/dashboard",
     icon: FileText,
     label: "Reports",
   },

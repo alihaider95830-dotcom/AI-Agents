@@ -8,6 +8,9 @@ VECTOR_STORE_CLEANUP_SCHEDULE_NAME = "cleanup-vector-stores-daily"
 VECTOR_STORE_CLEANUP_SCHEDULE_HOUR = 3
 VECTOR_STORE_CLEANUP_SCHEDULE_MINUTE = 0
 VECTOR_STORE_CLEANUP_IMPORT_PATH = "backend.tools.cleanup"
+RECONCILE_SUBSCRIPTIONS_TASK_NAME = "reconcile_subscriptions"
+RECONCILE_SUBSCRIPTIONS_SCHEDULE_NAME = "reconcile-subscriptions"
+RECONCILE_SUBSCRIPTIONS_IMPORT_PATH = "backend.workers.reconcile"
 
 celery_app = Celery(
     "studio",
@@ -26,7 +29,7 @@ celery_app.conf.update(
     task_default_queue=settings.celery_queue_name,
     task_routes={"backend.workers.tasks.*": {"queue": settings.celery_queue_name}},
     task_ignore_result=False,
-    imports=(VECTOR_STORE_CLEANUP_IMPORT_PATH,),
+    imports=(VECTOR_STORE_CLEANUP_IMPORT_PATH, RECONCILE_SUBSCRIPTIONS_IMPORT_PATH),
     beat_schedule={
         VECTOR_STORE_CLEANUP_SCHEDULE_NAME: {
             "task": VECTOR_STORE_CLEANUP_TASK_NAME,
@@ -34,7 +37,11 @@ celery_app.conf.update(
                 hour=VECTOR_STORE_CLEANUP_SCHEDULE_HOUR,
                 minute=VECTOR_STORE_CLEANUP_SCHEDULE_MINUTE,
             ),
-        }
+        },
+        RECONCILE_SUBSCRIPTIONS_SCHEDULE_NAME: {
+            "task": RECONCILE_SUBSCRIPTIONS_TASK_NAME,
+            "schedule": crontab(hour=2, minute=30),
+        },
     },
 )
 

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
 import redis
 from celery import Task
@@ -21,10 +24,44 @@ sync_engine = create_engine(settings.sync_database_url, pool_pre_ping=True)
 SyncSessionLocal = sessionmaker(bind=sync_engine, class_=Session, expire_on_commit=False)
 
 
-# TODO: integrate CrewAI/LangChain agent pipeline
-def run_crew(topic: str, report_type: str) -> str:
-    logger.info("running placeholder crew for report_type=%s", report_type)
-    return "PLACEHOLDER REPORT CONTENT"
+def _ensure_pipeline_import_path() -> None:
+    current_file = Path(__file__).resolve()
+    candidates = (
+        current_file.parents[2],
+        current_file.parents[3],
+    )
+    for candidate in candidates:
+        if not (candidate / "agents").is_dir():
+            continue
+        if str(candidate) not in sys.path:
+            sys.path.insert(0, str(candidate))
+            return
+        return
+
+
+def _run_agent_pipeline(topic: str, job_id: str | None) -> Any:
+    _ensure_pipeline_import_path()
+    from agents.crew import run_crew as run_agent_crew
+
+    return run_agent_crew(topic, job_id=job_id)
+
+
+def _extract_markdown_output(result: Any) -> str:
+    if isinstance(result, str):
+        markdown = result
+    elif isinstance(result, dict):
+        markdown = result.get("markdown_output")
+    else:
+        markdown = getattr(result, "markdown_output", None)
+
+    if not isinstance(markdown, str) or not markdown.strip():
+        raise ValueError("Crew pipeline returned no markdown output")
+    return markdown
+
+
+def run_crew(topic: str, report_type: str, job_id: str | None = None) -> str:
+    logger.info("running agent pipeline for report_type=%s", report_type)
+    return _extract_markdown_output(_run_agent_pipeline(topic, job_id=job_id))
 
 
 def _is_transient_error(exc: Exception) -> bool:
@@ -58,7 +95,7 @@ def generate_report(self: Task, report_id: str, user_id: str) -> str:
             {"agent": "researcher", "pct": 0, "type": "progress"},
         )
 
-        result = run_crew(report.topic, report.report_type)
+        result = run_crew(report.topic, report.report_type, job_id=str(job.id))
 
         report.status = ReportStatus.DONE
         report.content_md = result

@@ -7,10 +7,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY backend/requirements.txt /tmp/requirements.txt
+COPY studio/backend/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY backend /app/backend
+COPY studio/backend /app/backend
+COPY agents /app/agents
+COPY schemas /app/schemas
+COPY exceptions.py /app/exceptions.py
 
 CMD celery -A backend.workers.celery_app worker --loglevel=info --queues="${CELERY_QUEUE_NAME}"

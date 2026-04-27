@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     admin_api_key: str | None = None
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    stripe_pro_price_id: str | None = None
+    stripe_agency_price_id: str | None = None
     database_url: str
     redis_url: str
     vector_store_path: str = "./data/faiss_index"

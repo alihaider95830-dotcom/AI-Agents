@@ -37,6 +37,7 @@ class ReportListItem(BaseModel):
 class ReportDetail(ReportListItem):
     content_md: str | None = None
     word_count: int | None = None
+    job_id: UUID | None = None
 
 
 class ReportListResponse(BaseModel):

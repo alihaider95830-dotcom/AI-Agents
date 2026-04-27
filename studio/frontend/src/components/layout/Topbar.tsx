@@ -13,6 +13,7 @@ interface TopbarProps {
 }
 
 const pageTitles: Record<string, string> = {
+  "/dashboard": "Reports Library",
   "/generate": "Generate Report",
   "/reports": "Reports Library",
   "/settings": "Workspace Settings",

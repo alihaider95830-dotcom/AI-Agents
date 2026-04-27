@@ -33,7 +33,7 @@ def _serialize_report_list_item(report: Report) -> ReportListItem:
     )
 
 
-def _serialize_report_detail(report: Report) -> ReportDetail:
+def _serialize_report_detail(report: Report, job_id: UUID | None = None) -> ReportDetail:
     return ReportDetail(
         id=report.id,
         title=report.title,
@@ -44,6 +44,7 @@ def _serialize_report_detail(report: Report) -> ReportDetail:
         word_count=report.word_count,
         created_at=report.created_at,
         completed_at=report.completed_at,
+        job_id=job_id,
     )
 
 
@@ -60,6 +61,19 @@ async def _get_user_report(
         )
     )
     return result.scalar_one_or_none()
+
+
+async def _get_latest_report_job_id(db: AsyncSession, report_id: UUID) -> UUID | None:
+    result = await db.execute(
+        select(Job)
+        .where(Job.report_id == report_id)
+        .order_by(Job.created_at.desc())
+        .limit(1)
+    )
+    job = result.scalar_one_or_none()
+    if job is None:
+        return None
+    return job.id
 
 
 @router.post(
@@ -161,7 +175,8 @@ async def get_report(
     if report is None:
         raise NotFoundError("Report not found")
 
-    return _serialize_report_detail(report)
+    job_id = await _get_latest_report_job_id(db, report.id)
+    return _serialize_report_detail(report, job_id=job_id)
 
 
 @router.delete("/reports/{report_id}")

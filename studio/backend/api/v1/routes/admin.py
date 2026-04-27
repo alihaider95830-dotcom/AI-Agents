@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -8,14 +9,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.api.deps import get_db
+from backend.core import stripe_client
 from backend.core.config import settings
 from backend.core.credits import TIER_LIMITS, get_usage_summary
 from backend.core.exceptions import NotFoundError
-from backend.db.models import UsageLog, User, UserTier
+from backend.core.webhook_processor import WebhookProcessor
+from backend.db.session import SyncSessionLocal
+from backend.db.models import StripeEvent, UsageLog, User, UserTier
 
 AGENCY_ADMIN_CREDIT_BALANCE = 9999
 ADMIN_KEY_ERROR_DETAIL = "Invalid admin key"
 VALID_TIERS = tuple(TIER_LIMITS.keys())
+VALID_STRIPE_EVENT_STATUSES = {"processed", "failed", "skipped"}
 
 
 async def verify_admin_key(x_admin_key: str | None = Header(default=None)) -> None:
@@ -97,3 +102,46 @@ async def set_user_tier(
     await db.commit()
     await db.refresh(user)
     return await get_usage_summary(user, db)
+
+
+@router.get("/stripe-events")
+async def list_stripe_events(
+    status: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db),
+) -> list[dict[str, object]]:
+    if status is not None and status not in VALID_STRIPE_EVENT_STATUSES:
+        raise HTTPException(status_code=422, detail="Invalid status")
+
+    limit = min(max(limit, 1), 200)
+    offset = max(offset, 0)
+    statement = select(StripeEvent)
+    if status is not None:
+        statement = statement.where(StripeEvent.status == status)
+    statement = statement.order_by(StripeEvent.created_at.desc()).offset(offset).limit(limit)
+
+    result = await db.execute(statement)
+    events = result.scalars().all()
+    return [
+        {
+            "id": event.id,
+            "type": event.type,
+            "status": event.status,
+            "processed_at": event.processed_at,
+            "error_message": event.error_message,
+            "created_at": event.created_at,
+        }
+        for event in events
+    ]
+
+
+@router.post("/stripe-events/{event_id}/replay")
+async def replay_stripe_event(event_id: str) -> dict[str, bool | str]:
+    def run_replay() -> str:
+        event = stripe_client.retrieve_event(event_id)
+        with SyncSessionLocal() as sync_db:
+            return WebhookProcessor(sync_db).process(dict(event))
+
+    result = await asyncio.to_thread(run_replay)
+    return {"replayed": True, "result": result}
