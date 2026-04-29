@@ -1,14 +1,53 @@
-venv/
-__pycache__/
-.crewai/
-.crewai_test/
-.pnpm-store/
-.pytest_cache/
-studio/.crewai/
-studio/.pytest_cache/
+# Environment
+.env
+.env.local
+.env.production
+.env*.local
+*.env
 studio/.env
+studio/frontend/.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+# Node
+node_modules/
+.next/
+out/
+frontend/.next/
+frontend/node_modules/
 studio/frontend/.corepack/
 studio/frontend/.next/
 studio/frontend/.swc/
 studio/frontend/node_modules/
-studio/frontend/.env.local
+
+# FAISS indexes (never commit vector store data)
+data/
+*.faiss
+*.pkl
+
+# Local agent/runtime state
+.crewai/
+.crewai_test/
+.pnpm-store/
+studio/.crewai/
+studio/.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

@@ -14,6 +14,12 @@ os.environ.setdefault("SUPABASE_SERVICE_KEY", "test-service-key")
 os.environ.setdefault("SUPABASE_ANON_KEY", "test-anon-key")
 os.environ.setdefault("FRONTEND_URL", "http://localhost:3000")
 os.environ.setdefault("VECTOR_STORE_PATH", "./data/faiss_index")
+os.environ.setdefault("STRIPE_SECRET_KEY", "sk_test_placeholder")
+os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_placeholder")
+os.environ.setdefault("STRIPE_PRO_PRICE_ID", "price_placeholder_pro")
+os.environ.setdefault("STRIPE_AGENCY_PRICE_ID", "price_placeholder_agency")
+os.environ.setdefault("ENVIRONMENT", "test")
+os.environ.setdefault("ALLOWED_HOSTS", "*")
 
 
 @pytest.fixture

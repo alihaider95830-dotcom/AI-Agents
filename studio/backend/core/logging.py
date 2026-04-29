@@ -1,10 +1,15 @@
 import json
 import logging
+from contextvars import ContextVar
 from datetime import datetime, timezone
 
 from backend.core.config import settings
 
 _logging_configured = False
+request_id_context: ContextVar[str | None] = ContextVar(
+    "request_id",
+    default=None,
+)
 
 
 class JsonFormatter(logging.Formatter):
@@ -15,6 +20,9 @@ class JsonFormatter(logging.Formatter):
             "message": record.getMessage(),
             "module": record.name,
         }
+        request_id = request_id_context.get()
+        if request_id is not None:
+            payload["request_id"] = request_id
         return json.dumps(payload)
 
 
@@ -39,4 +47,3 @@ def _configure_logging() -> None:
 def get_logger(name: str) -> logging.Logger:
     _configure_logging()
     return logging.getLogger(name)
-

@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Source_Sans_3 } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import "@/app/globals.css";
-import { PaymentWarningBoundary } from "@/components/billing/PaymentWarningBoundary";
 import { Providers } from "@/components/providers/Providers";
 
-const headingFont = Space_Grotesk({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-heading",
-});
-
-const bodyFont = Source_Sans_3({
-  subsets: ["latin"],
-  variable: "--font-body",
+  display: "swap",
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -29,11 +24,8 @@ export default function RootLayout({
 }: RootLayoutProps): JSX.Element {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${headingFont.variable} ${bodyFont.variable} font-[var(--font-body)]`}
-      >
+      <body className={`${inter.variable} font-[var(--font-inter)]`}>
         <Providers>
-          <PaymentWarningBoundary />
           {children}
         </Providers>
       </body>

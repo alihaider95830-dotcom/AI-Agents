@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { PaymentWarningBoundary } from "@/components/billing/PaymentWarningBoundary";
 import { useSession } from "@/hooks/useSession";
 
 interface DashboardLayoutProps {
@@ -37,6 +38,7 @@ export default function DashboardLayout({
       <Sidebar onLogout={logout} user={user} />
       <div className="flex min-h-screen flex-1 flex-col">
         <Topbar user={user} />
+        <PaymentWarningBoundary />
         <main className="flex-1 bg-white/50 p-6 dark:bg-slate-950/40">
           {children}
         </main>

@@ -47,3 +47,48 @@ export const createBillingPortal = async (
   apiRequest<PortalResponse>("/billing/portal", token, {
     method: "POST",
   });
+
+// ---------------------------------------------------------------------------
+// Checkout session
+// ---------------------------------------------------------------------------
+
+export interface CheckoutRequest {
+  price_id: string;
+  success_url: string;
+  cancel_url: string;
+}
+
+export interface CheckoutResponse {
+  checkout_url: string;
+}
+
+export const createCheckoutSession = async (
+  token: string,
+  priceId: string,
+  successUrl: string,
+  cancelUrl: string,
+): Promise<CheckoutResponse> =>
+  apiRequest<CheckoutResponse>("/billing/checkout", token, {
+    method: "POST",
+    body: JSON.stringify({
+      price_id: priceId,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+    }),
+  });
+
+// ---------------------------------------------------------------------------
+// Subscription detail
+// ---------------------------------------------------------------------------
+
+export interface SubscriptionDetail {
+  status: string;
+  current_period_end?: number | null;
+  cancel_at_period_end?: boolean | null;
+}
+
+export const getSubscription = async (
+  token: string,
+): Promise<SubscriptionDetail> =>
+  apiRequest<SubscriptionDetail>("/billing/subscription", token);
+

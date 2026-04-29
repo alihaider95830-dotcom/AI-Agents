@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     stream_keepalive_timeout_seconds: int = 20
     event_store_ttl_seconds: int = 3600
     request_timeout_seconds: int = 30
+    environment: str = "development"
+    allowed_hosts: list[str] = ["*"]
+    metrics_token: str = ""
+    metrics_allowed_ips: list[str] = []
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -63,6 +67,13 @@ class Settings(BaseSettings):
                 1,
             )
         return self.database_url
+
+    @field_validator("allowed_hosts", "metrics_allowed_ips", mode="before")
+    @classmethod
+    def parse_csv_list(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
 
 
 @lru_cache

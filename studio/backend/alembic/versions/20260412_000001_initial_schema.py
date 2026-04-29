@@ -22,10 +22,6 @@ report_status = sa.Enum("pending", "running", "done", "failed", name="report_sta
 
 
 def upgrade() -> None:
-    bind = op.get_bind()
-    user_tier.create(bind, checkfirst=True)
-    report_status.create(bind, checkfirst=True)
-
     op.create_table(
         "users",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),

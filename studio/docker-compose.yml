@@ -19,10 +19,13 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ..
+      dockerfile: studio/backend/Dockerfile
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      MODE: api
     ports:
       - "8000:8000"
     depends_on:

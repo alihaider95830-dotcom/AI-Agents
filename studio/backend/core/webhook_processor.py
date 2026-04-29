@@ -345,6 +345,7 @@ class WebhookProcessor:
 
         user.subscription_status = "paused"
         _assign_tier(user, UserTier.FREE.value)
+        user.credits_remaining = _monthly_credits_for_tier(UserTier.FREE.value)
         self.db.add(user)
         self.db.add(
             UsageLog(
@@ -354,3 +355,4 @@ class WebhookProcessor:
                 delta=0,
             )
         )
+        self._publish_tier_change(str(user.id), UserTier.FREE.value)

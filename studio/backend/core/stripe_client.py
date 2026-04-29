@@ -4,6 +4,8 @@ from typing import Any
 
 from backend.core.config import settings
 
+STRIPE_API_VERSION = "2026-02-25.clover"
+
 try:
     import stripe as _stripe
 except Exception:  # pragma: no cover - dependency is provided in deployed envs
@@ -24,11 +26,16 @@ class StripeCardError(Exception):
         self.user_message = user_message or message
 
 
+class StripeWebhookPayloadError(Exception):
+    pass
+
+
 def _client():
     if _stripe is None:
         raise StripeUnavailableError("Stripe SDK is not installed")
     if settings.stripe_secret_key:
         _stripe.api_key = settings.stripe_secret_key
+    _stripe.api_version = STRIPE_API_VERSION
     return _stripe
 
 
@@ -42,7 +49,31 @@ def construct_webhook_event(payload: bytes, sig_header: str, secret: str | None)
         )
     except stripe.error.SignatureVerificationError as exc:
         raise StripeSignatureVerificationError(str(exc)) from exc
+    except ValueError as exc:
+        raise StripeWebhookPayloadError(str(exc)) from exc
     return dict(event)
+
+
+def get_or_create_customer(user: Any) -> Any:
+    stripe = _client()
+    customer_id = getattr(user, "stripe_customer_id", None)
+    if customer_id:
+        try:
+            return stripe.Customer.retrieve(str(customer_id))
+        except stripe.error.InvalidRequestError:
+            pass
+
+    email = getattr(user, "email", None)
+    if email:
+        customers = stripe.Customer.list(email=str(email), limit=1)
+        customer_items = getattr(customers, "data", None)
+        if customer_items is None and isinstance(customers, dict):
+            customer_items = customers.get("data")
+        if customer_items:
+            return customer_items[0]
+
+    metadata = {"user_id": str(getattr(user, "id", ""))}
+    return stripe.Customer.create(email=email, metadata=metadata)
 
 
 def retrieve_subscription(subscription_id: str) -> Any:

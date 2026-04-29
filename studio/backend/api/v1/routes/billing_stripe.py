@@ -4,6 +4,7 @@ import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.api.deps import get_current_active_user, get_db
@@ -36,6 +37,9 @@ async def stripe_webhook(
     except stripe_client.StripeSignatureVerificationError as exc:
         logger.warning("Invalid Stripe signature: %s", exc)
         raise HTTPException(status_code=400, detail="Invalid signature") from exc
+    except stripe_client.StripeWebhookPayloadError as exc:
+        logger.warning("Invalid Stripe webhook payload: %s", exc)
+        raise HTTPException(status_code=400, detail="Invalid payload") from exc
 
     def run_processor() -> str:
         with SyncSessionLocal() as sync_db:
@@ -82,7 +86,10 @@ async def retry_payment(
             content={"error": "No payment retry needed"},
         )
 
-    invoices = stripe_client.list_open_invoices(current_user.stripe_subscription_id)
+    invoices = await asyncio.to_thread(
+        stripe_client.list_open_invoices,
+        current_user.stripe_subscription_id,
+    )
     invoice_items = getattr(invoices, "data", None)
     if invoice_items is None and isinstance(invoices, dict):
         invoice_items = invoices.get("data")
@@ -98,9 +105,14 @@ async def retry_payment(
     invoice_id = getattr(invoice, "id", None)
     if invoice_id is None and isinstance(invoice, dict):
         invoice_id = invoice.get("id")
+    if not invoice_id:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Open invoice has no ID"},
+        )
 
     try:
-        stripe_client.pay_invoice(str(invoice_id))
+        await asyncio.to_thread(stripe_client.pay_invoice, str(invoice_id))
     except stripe_client.StripeCardError as exc:
         return JSONResponse(
             status_code=402,
@@ -123,7 +135,8 @@ async def create_customer_portal(
             content={"error": "No Stripe customer found"},
         )
 
-    session = stripe_client.create_billing_portal_session(
+    session = await asyncio.to_thread(
+        stripe_client.create_billing_portal_session,
         customer_id=current_user.stripe_customer_id,
         return_url=str(settings.frontend_url) if settings.frontend_url else None,
     )
@@ -132,3 +145,74 @@ async def create_customer_portal(
         portal_url = session.get("url")
 
     return {"portal_url": str(portal_url)}
+
+
+# ---------------------------------------------------------------------------
+# Checkout
+# ---------------------------------------------------------------------------
+
+class _CheckoutRequest(BaseModel):
+    price_id: str
+    success_url: str
+    cancel_url: str
+
+
+@router.post("/checkout")
+async def create_checkout(
+    body: _CheckoutRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> dict[str, str]:
+    del db
+    customer = await asyncio.to_thread(
+        stripe_client.get_or_create_customer,
+        current_user,
+    )
+    customer_id = getattr(customer, "id", None)
+    if customer_id is None and isinstance(customer, dict):
+        customer_id = customer.get("id")
+
+    session = await asyncio.to_thread(
+        stripe_client.create_checkout_session,
+        customer=str(customer_id),
+        line_items=[{"price": body.price_id, "quantity": 1}],
+        mode="subscription",
+        success_url=body.success_url,
+        cancel_url=body.cancel_url,
+    )
+    session_url = getattr(session, "url", None)
+    if session_url is None and isinstance(session, dict):
+        session_url = session.get("url")
+
+    return {"checkout_url": str(session_url)}
+
+
+# ---------------------------------------------------------------------------
+# Subscription detail
+# ---------------------------------------------------------------------------
+
+@router.get("/subscription")
+async def get_subscription(
+    current_user: User = Depends(get_current_active_user),
+) -> dict[str, str | bool | int | None]:
+    if current_user.stripe_subscription_id is None:
+        return {"status": "none"}
+
+    sub = await asyncio.to_thread(
+        stripe_client.retrieve_subscription,
+        current_user.stripe_subscription_id,
+    )
+    return {
+        "status": (
+            getattr(sub, "status", None)
+            or (sub.get("status") if isinstance(sub, dict) else None)
+        ),
+        "current_period_end": (
+            getattr(sub, "current_period_end", None)
+            or (sub.get("current_period_end") if isinstance(sub, dict) else None)
+        ),
+        "cancel_at_period_end": (
+            getattr(sub, "cancel_at_period_end", None)
+            or (sub.get("cancel_at_period_end") if isinstance(sub, dict) else None)
+        ),
+    }

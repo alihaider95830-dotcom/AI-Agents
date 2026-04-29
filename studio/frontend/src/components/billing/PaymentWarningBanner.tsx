@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import { AlertTriangle, Info, LoaderCircle } from "lucide-react";
 
 import { useSupabaseAccessToken } from "@/hooks/useSupabaseAccessToken";
 import {
@@ -88,10 +88,17 @@ export const PaymentWarningBanner = ({
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium">
-            {isPastDue
-              ? "⚠️ Your payment failed. Update your payment method to keep your Pro access."
-              : "ℹ️ Your subscription is paused. Reactivate to generate new reports."}
+          <p className="flex items-center gap-2 text-sm font-medium">
+            {isPastDue ? (
+              <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+            ) : (
+              <Info className="h-4 w-4 shrink-0" aria-hidden="true" />
+            )}
+            <span>
+              {isPastDue
+                ? "Your payment failed. Update your payment method to keep your Pro access."
+                : "Your subscription is paused. Reactivate to generate new reports."}
+            </span>
           </p>
           {message ? (
             <p

@@ -20,6 +20,8 @@ class ReportStatus(str, enum.Enum):
     RUNNING = "running"
     DONE = "done"
     FAILED = "failed"
+    CANCELLED = "cancelled"
+
 
 
 class User(Base):

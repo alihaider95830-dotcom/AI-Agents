@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /generate
+Disallow: /reports
+Disallow: /api
+Sitemap: https://yourdomain.com/sitemap.xml

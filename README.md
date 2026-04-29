@@ -6,7 +6,10 @@ findings into an outline, drafts a cited Markdown report, and runs a QA pass.
 Studio wraps that workflow with authentication, credits, report jobs, streaming
 progress, and a web dashboard.
 
-## What Is Inside
+## Project Layout
+
+> [!IMPORTANT]
+> `studio/backend/` is the canonical Python package root. All `pytest` invocations and import paths use it as their base (e.g. `from backend.api.deps import …`). There is **no** top-level `backend/` or `frontend/` directory — those paths exist only inside `studio/`.
 
 ```text
 .
@@ -15,12 +18,13 @@ progress, and a web dashboard.
 |-- tests/                   # Unit tests for the standalone agent pipeline
 |-- studio/
 |   |-- backend/             # FastAPI API, SQLAlchemy models, Celery tasks, tools
-|   |-- frontend/            # Next.js dashboard
+|   |-- frontend/            # Next.js dashboard (pnpm workspace)
 |   |-- workers/             # Worker Dockerfile
 |   |-- docker-compose.yml   # Postgres, Redis, backend, and worker services
-|   `-- alembic.ini          # Database migration config
+|   `-- alembic.ini          # Database migration config (run from studio/)
 `-- exceptions.py            # Shared pipeline exceptions
 ```
+
 
 ## Features
 

@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from contextlib import asynccontextmanager, suppress
 from time import perf_counter
 
@@ -7,14 +8,16 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.api.deps import get_db
 from backend.api.v1.routes.health import database_health_check, health_check
 from backend.api.v1.router import api_v1_router
 from backend.core.config import settings
 from backend.core.exceptions import StudioException
-from backend.core.logging import get_logger
+from backend.core.logging import get_logger, request_id_context
 from backend.core.middleware import TimeoutMiddleware
+from backend.core.monitoring import register_metrics_route
 from backend.core.redis_client import close_pools
 from backend.db.session import AsyncSessionLocal
 from backend.tools.warmup import warm_vector_stores
@@ -44,7 +47,16 @@ async def lifespan(_: FastAPI):
     await close_pools()
 
 
-app = FastAPI(title="Studio API", lifespan=lifespan)
+is_production = settings.environment.lower() == "production"
+
+app = FastAPI(
+    title="Studio API",
+    version="1.0.0",
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+    openapi_url=None if is_production else "/openapi.json",
+    lifespan=lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -53,24 +65,36 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
 app.add_middleware(TimeoutMiddleware)
 
 app.include_router(api_v1_router)
+register_metrics_route(app)
 
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    request.state.request_id = request_id
+    token = request_id_context.set(request_id)
     started_at = perf_counter()
-    response = await call_next(request)
-    duration_ms = round((perf_counter() - started_at) * 1000, 2)
-    logger.info(
-        "request completed | method=%s path=%s status_code=%s duration_ms=%s",
-        request.method,
-        request.url.path,
-        response.status_code,
-        duration_ms,
-    )
-    return response
+    try:
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        duration_ms = round((perf_counter() - started_at) * 1000, 2)
+        logger.info(
+            (
+                "request completed | method=%s path=%s "
+                "status_code=%s duration_ms=%s"
+            ),
+            request.method,
+            request.url.path,
+            response.status_code,
+            duration_ms,
+        )
+        return response
+    finally:
+        request_id_context.reset(token)
 
 
 @app.exception_handler(StudioException)
