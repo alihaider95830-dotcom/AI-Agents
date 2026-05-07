@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ReportList } from "@/components/report/ReportList";
+import { Button } from "@/components/ui/Button";
 import { ApiError } from "@/lib/api/client";
 import { getUsageSummary, type UsageSummary } from "@/lib/api/billing";
 import { getReports } from "@/lib/api/reports";
@@ -34,39 +35,50 @@ export default async function DashboardPage(): Promise<JSX.Element> {
       usage.reports_this_month >= usage.monthly_limit;
 
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950 dark:bg-slate-950 dark:text-slate-50 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl space-y-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight">
-                Your reports
-              </h1>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Review, export, or remove generated reports from your workspace.
-              </p>
-            </div>
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-              href="/generate"
-            >
-              New report
-            </Link>
+      <div className="space-y-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-[26px] font-semibold tracking-tight text-[var(--text-primary)]">
+              Reports Library
+            </h1>
+            <p className="mt-2 text-[15px] text-[var(--text-secondary)]">
+              Review, export, or remove generated reports from your workspace.
+            </p>
           </div>
-
-          <section className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
-            {formatUsageLine(usage)}
-          </section>
-
-          {freeLimitReached ? (
-            <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-              Your free plan is at its monthly report limit. Upgrade to keep
-              generating reports without waiting for the reset date.
-            </section>
-          ) : null}
-
-          <ReportList initialData={reports} />
+          <Link href="/generate" passHref legacyBehavior>
+            <Button variant="primary">
+              New report
+            </Button>
+          </Link>
         </div>
-      </main>
+
+        <section className="glass-card !bg-white/[0.02] p-5 text-[14px] text-[var(--text-secondary)]">
+          <div className="flex items-center gap-3">
+            <div className="h-1.5 w-1.5 rounded-full bg-white/20"></div>
+            {formatUsageLine(usage)}
+          </div>
+        </section>
+
+        {freeLimitReached ? (
+          <section className="glass-elevated p-8 bg-white/[0.05] border-white/20">
+            <h3 className="text-[20px] font-semibold text-[var(--text-primary)]">Monthly limit reached</h3>
+            <p className="mt-2 text-[15px] text-[var(--text-secondary)] leading-relaxed">
+              Your free plan is at its monthly report limit. Upgrade to Studio Pro to keep
+              generating reports without waiting for the reset date.
+            </p>
+            <Link href="/pricing" passHref legacyBehavior>
+              <Button 
+                variant="primary"
+                className="mt-8"
+              >
+                View Pro Plan
+              </Button>
+            </Link>
+          </section>
+        ) : null}
+
+        <ReportList initialData={reports} />
+      </div>
     );
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {

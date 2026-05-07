@@ -33,6 +33,22 @@ class Settings(BaseSettings):
     allowed_hosts: list[str] = ["*"]
     metrics_token: str = ""
     metrics_allowed_ips: list[str] = []
+    # AWS/S3 Configuration
+    aws_access_key_id: str | None = None
+    aws_secret_access_key: str | None = None
+    aws_region: str = "us-east-1"
+    aws_s3_bucket: str | None = None
+    # Email Configuration
+    sendgrid_api_key: str | None = None
+    email_from_address: str = "noreply@studio.app"
+    email_from_name: str = "Studio"
+    # Encryption
+    encryption_key: str | None = None
+    # Error Tracking
+    sentry_dsn: str | None = None
+    # Monitoring
+    datadog_api_key: str | None = None
+    datadog_app_key: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

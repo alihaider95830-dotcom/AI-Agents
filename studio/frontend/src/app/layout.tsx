@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, DM_Mono } from "next/font/google";
 
 import "@/app/globals.css";
 import { Providers } from "@/components/providers/Providers";
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-sans",
+});
+
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -24,7 +31,10 @@ export default function RootLayout({
 }: RootLayoutProps): JSX.Element {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-[var(--font-inter)]`}>
+      <body className={`${dmSans.variable} ${dmMono.variable} font-sans bg-noise`}>
+        <div className="bg-mesh" />
+        <div className="orb-1" />
+        <div className="orb-2" />
         <Providers>
           {children}
         </Providers>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useReducer } from "react";
-import { LoaderCircle, RefreshCw } from "lucide-react";
+import { LoaderCircle, RefreshCw, FileText, Download, Copy, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AgentStatusBar } from "@/components/generate/AgentStatusBar";
@@ -295,10 +295,13 @@ export default function GeneratePage(): JSX.Element {
     : "#";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 max-w-5xl mx-auto">
       {(mode === "idle" || mode === "queued") && user ? (
-        <section className="rounded-[1.5rem] border border-brand-mist bg-brand-mist/80 px-5 py-4 text-sm text-brand-ink shadow-sm dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-100">
-          You have {user.credits} credits remaining. Each report costs 1 credit.
+        <section className="glass-card !bg-white/[0.02] px-5 py-3 text-[13px] text-[var(--text-secondary)]">
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+            <span>You have {user.credits} credits remaining. Each report costs 1 credit.</span>
+          </div>
         </section>
       ) : null}
 
@@ -311,14 +314,17 @@ export default function GeneratePage(): JSX.Element {
       ) : null}
 
       {mode === "queued" ? (
-        <section className="rounded-[1.75rem] border border-slate-200/70 bg-white/85 p-6 shadow-panel dark:border-slate-800 dark:bg-slate-950/80">
-          <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200">
-            <LoaderCircle className="h-5 w-5 animate-spin text-brand-ocean dark:text-brand-gold" />
+        <section className="glass-elevated p-10 text-center animate-glass-enter">
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative">
+              <div className="absolute inset-0 blur-2xl bg-white/10 rounded-full animate-pulse" />
+              <LoaderCircle className="h-12 w-12 animate-spin text-white relative z-10" />
+            </div>
             <div>
-              <h2 className="font-[var(--font-heading)] text-2xl font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-[26px] font-semibold text-[var(--text-primary)] tracking-tight">
                 Job queued...
               </h2>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-2 text-[15px] text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
                 We&apos;ve handed your topic to the crew and are waiting for the
                 first agent to begin.
               </p>
@@ -328,7 +334,7 @@ export default function GeneratePage(): JSX.Element {
       ) : null}
 
       {mode === "streaming" || mode === "complete" ? (
-        <div className="space-y-6 transition-all duration-300">
+        <div className="space-y-8 animate-glass-enter">
           <AgentStatusBar
             currentStage={effectiveStage}
             progress_pct={progress}
@@ -340,46 +346,46 @@ export default function GeneratePage(): JSX.Element {
           />
 
           {mode === "complete" && finalReport && finalReport.report_id ? (
-            <section className="rounded-[1.75rem] border border-slate-200/70 bg-white/85 p-6 shadow-panel dark:border-slate-800 dark:bg-slate-950/80">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <section className="glass-elevated p-8 bg-white/[0.04]">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.35em] text-brand-ocean dark:text-brand-gold">
-                    Delivery
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-tertiary)]">
+                    DELIVERY
                   </p>
-                  <h3 className="mt-2 font-[var(--font-heading)] text-2xl font-semibold text-slate-900 dark:text-white">
+                  <h3 className="mt-1 text-[20px] font-semibold text-[var(--text-primary)]">
                     Final report is ready
                   </h3>
                 </div>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-mist px-4 text-sm font-medium text-brand-ink transition-all duration-200 hover:bg-sky-100 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-                    href={downloadPdfHref}
-                  >
-                    Download PDF
+                <div className="flex flex-wrap gap-3">
+                  <Link href={downloadPdfHref} passHref legacyBehavior>
+                    <Button variant="primary">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download PDF
+                    </Button>
                   </Link>
                   <Button
-                    className="sm:w-auto"
                     onClick={() => {
                       void handleCopyMarkdown();
                     }}
                     variant="secondary"
                   >
+                    <Copy className="h-4 w-4 mr-2" />
                     Copy Markdown
                   </Button>
                   <Button
-                    className="sm:w-auto"
                     onClick={handleReset}
                     variant="ghost"
                   >
+                    <Plus className="h-4 w-4 mr-2" />
                     New Report
                   </Button>
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Badge>{finalReport.total_word_count} words</Badge>
-                <Badge>{Math.round(finalReport.quality_score * 100)}% quality</Badge>
-                <Badge>{formatTimestamp(finalReport.timestamp)}</Badge>
+              <div className="mt-8 flex flex-wrap gap-4 pt-6 border-t border-white/05">
+                <Badge variant="default">{finalReport.total_word_count} words</Badge>
+                <Badge variant="pro">{Math.round(finalReport.quality_score * 100)}% quality</Badge>
+                <Badge variant="default" className="font-mono">{formatTimestamp(finalReport.timestamp)}</Badge>
               </div>
             </section>
           ) : null}
@@ -387,43 +393,47 @@ export default function GeneratePage(): JSX.Element {
       ) : null}
 
       {mode === "failed" ? (
-        <section className="rounded-[1.75rem] border border-rose-200 bg-rose-50/80 p-6 shadow-panel dark:border-rose-900/60 dark:bg-rose-950/20">
-          <p className="text-xs uppercase tracking-[0.35em] text-rose-500">
+        <section className="glass-elevated p-10 border-red-500/20 bg-red-500/[0.02] animate-glass-enter">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-red-400">
             Job failed
           </p>
-          <h2 className="mt-2 font-[var(--font-heading)] text-2xl font-semibold text-slate-900 dark:text-white">
+          <h2 className="mt-2 text-[26px] font-semibold text-[var(--text-primary)]">
             We hit a snag while generating your report
           </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+          <p className="mt-4 max-w-2xl text-[15px] leading-7 text-[var(--text-secondary)]">
             {error}
           </p>
           <Button
-            className="mt-6"
+            className="mt-8"
             onClick={handleReset}
             variant="secondary"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </Button>
         </section>
       ) : null}
 
       {mode === "idle" ? (
-        <section className="rounded-[1.75rem] border border-slate-200/70 bg-white/75 p-6 shadow-panel dark:border-slate-800 dark:bg-slate-950/75">
-          <p className="text-xs uppercase tracking-[0.35em] text-brand-ocean dark:text-brand-gold">
-            Report modes
-          </p>
-          <div className="mt-4 grid gap-4 lg:grid-cols-4">
+        <section className="animate-glass-enter">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="h-px flex-1 bg-white/05" />
+            <p className="text-[10px] uppercase tracking-[0.35em] text-[var(--text-tertiary)] font-medium">
+              Report modes
+            </p>
+            <span className="h-px flex-1 bg-white/05" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {REPORT_TYPE_OPTIONS.map((option) => (
               <article
                 key={option.value}
-                className="rounded-2xl border border-slate-200/70 bg-white/80 p-4 dark:border-slate-800 dark:bg-slate-900/70"
+                className="glass-card p-6 !bg-white/[0.02] group hover:!bg-white/[0.05]"
               >
-                <h3 className="font-semibold capitalize text-slate-900 dark:text-white">
+                <h3 className="text-[15px] font-semibold capitalize text-[var(--text-primary)] group-hover:text-white transition-colors">
                   {option.label}
                 </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                  Shape the report structure around a {option.value} lens with
+                <p className="mt-3 text-[13px] leading-6 text-[var(--text-secondary)]">
+                  Shape the report structure around a <span className="text-[var(--text-tertiary)]">{option.value}</span> lens with
                   an end-to-end AI crew workflow.
                 </p>
               </article>

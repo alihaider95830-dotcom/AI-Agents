@@ -1,49 +1,75 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Star } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 const HERO_SVG = encodeURIComponent(`
 <svg xmlns='http://www.w3.org/2000/svg' width='1280' height='820' viewBox='0 0 1280 820' fill='none'>
   <defs>
     <linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'>
-      <stop offset='0%' stop-color='#f5f5f5'/>
-      <stop offset='100%' stop-color='#e5e7eb'/>
+      <stop offset='0%' stop-color='#0a0a0b'/>
+      <stop offset='100%' stop-color='#111113'/>
     </linearGradient>
+    <pattern id='grid' width='60' height='60' patternUnits='userSpaceOnUse'>
+      <path d='M0 60L60 60 M60 0L60 60' fill='none' stroke='#ffffff' stroke-opacity='0.03' stroke-width='0.5'/>
+    </pattern>
   </defs>
-  <rect x='20' y='20' width='1240' height='780' rx='24' fill='url(#bg)' stroke='#d1d5db'/>
-  <rect x='20' y='20' width='1240' height='74' rx='24' fill='#f3f4f6'/>
-  <circle cx='64' cy='57' r='8' fill='#ef4444'/>
-  <circle cx='92' cy='57' r='8' fill='#f59e0b'/>
-  <circle cx='120' cy='57' r='8' fill='#22c55e'/>
-  <rect x='180' y='40' width='420' height='34' rx='17' fill='#ffffff' stroke='#d4d4d8'/>
-  <text x='202' y='61' fill='#525252' font-size='14' font-family='Inter, sans-serif'>app.studio.ai/generate</text>
+  
+  <rect width='1280' height='820' fill='url(#bg)'/>
+  <rect width='1280' height='820' fill='url(#grid)'/>
 
-  <rect x='72' y='130' width='1136' height='82' rx='14' fill='#ffffff' stroke='#e5e7eb'/>
-  <text x='100' y='163' fill='#737373' font-size='14' font-family='Inter, sans-serif'>Topic</text>
-  <text x='100' y='191' fill='#111827' font-size='22' font-family='Inter, sans-serif'>The future of on-device AI</text>
+  <!-- Ambient Orbs -->
+  <circle cx='200' cy='100' r='200' fill='white' fill-opacity='0.02' filter='blur(80px)'/>
+  <circle cx='1000' cy='600' r='150' fill='white' fill-opacity='0.015' filter='blur(100px)'/>
 
-  <rect x='72' y='236' width='250' height='62' rx='14' fill='#ecfdf3' stroke='#bbf7d0'/>
-  <text x='94' y='261' fill='#166534' font-size='14' font-family='Inter, sans-serif'>Researcher</text>
-  <text x='94' y='282' fill='#15803d' font-size='15' font-family='Inter, sans-serif'>Done</text>
+  <!-- Main App Window Frame -->
+  <rect x='40' y='60' width='1200' height='720' rx='24' fill='white' fill-opacity='0.03' stroke='white' stroke-opacity='0.1' stroke-width='1'/>
+  
+  <!-- Header Bar -->
+  <path d='M40 84 a24 24 0 0 1 24 -24 h1152 a24 24 0 0 1 24 24 v36 h-1200 v-36 z' fill='white' fill-opacity='0.02'/>
+  <line x1='40' y1='120' x2='1240' y2='120' stroke='white' stroke-opacity='0.05' stroke-width='1'/>
+  
+  <!-- Mac Dots -->
+  <circle cx='80' cy='90' r='6' fill='white' fill-opacity='0.1'/>
+  <circle cx='104' cy='90' r='6' fill='white' fill-opacity='0.1'/>
+  <circle cx='128' cy='90' r='6' fill='white' fill-opacity='0.1'/>
 
-  <rect x='336' y='236' width='250' height='62' rx='14' fill='#ecfdf3' stroke='#bbf7d0'/>
-  <text x='358' y='261' fill='#166534' font-size='14' font-family='Inter, sans-serif'>Planner</text>
-  <text x='358' y='282' fill='#15803d' font-size='15' font-family='Inter, sans-serif'>Done</text>
+  <!-- Sidebar -->
+  <rect x='40' y='121' width='240' height='659' fill='white' fill-opacity='0.01'/>
+  <line x1='280' y1='121' x2='280' y2='780' stroke='white' stroke-opacity='0.05' stroke-width='1'/>
+  
+  <!-- Sidebar Items -->
+  <rect x='56' y='140' width='208' height='36' rx='8' fill='white' fill-opacity='0.05'/>
+  <rect x='72' y='152' width='12' height='12' rx='3' fill='white'/>
+  <text x='94' y='163' fill='white' font-size='13' font-family='DM Sans, sans-serif' font-weight='500'>Generate</text>
 
-  <rect x='600' y='236' width='250' height='62' rx='14' fill='#eef2ff' stroke='#c7d2fe'/>
-  <text x='622' y='261' fill='#3730a3' font-size='14' font-family='Inter, sans-serif'>Writer</text>
-  <text x='622' y='282' fill='#4338ca' font-size='15' font-family='Inter, sans-serif'>Writing...</text>
-  <circle cx='808' cy='269' r='7' fill='#4f46e5'>
-    <animate attributeName='opacity' values='1;0.35;1' dur='1.2s' repeatCount='indefinite'/>
-  </circle>
+  <rect x='72' y='200' width='12' height='12' rx='3' fill='white' fill-opacity='0.2'/>
+  <text x='94' y='209' fill='white' fill-opacity='0.4' font-size='13' font-family='DM Sans, sans-serif'>Reports</text>
 
-  <rect x='864' y='236' width='250' height='62' rx='14' fill='#f5f5f5' stroke='#e5e7eb'/>
-  <text x='886' y='261' fill='#525252' font-size='14' font-family='Inter, sans-serif'>QA</text>
-  <text x='886' y='282' fill='#6b7280' font-size='15' font-family='Inter, sans-serif'>Waiting</text>
+  <!-- Main Content Area -->
+  <rect x='320' y='160' width='880' height='200' rx='20' fill='white' fill-opacity='0.04' stroke='white' stroke-opacity='0.1' stroke-width='1'/>
+  
+  <!-- Progress -->
+  <rect x='360' y='240' width='800' height='4' rx='2' fill='white' fill-opacity='0.05'/>
+  <rect x='360' y='240' width='480' height='4' rx='2' fill='white' fill-opacity='0.6'/>
+  
+  <!-- Steps -->
+  <circle cx='360' cy='242' r='14' fill='white' stroke='white' stroke-opacity='0.2'/>
+  <circle cx='360' cy='242' r='4' fill='#0a0a0b'/>
+  
+  <circle cx='520' cy='242' r='14' fill='white' stroke='white' stroke-opacity='0.2'/>
+  <circle cx='520' cy='242' r='4' fill='#0a0a0b'/>
 
-  <rect x='72' y='326' width='1136' height='420' rx='18' fill='#ffffff' stroke='#e5e7eb'/>
-  <text x='102' y='368' fill='#111827' font-size='26' font-family='Inter, sans-serif' font-weight='600'>On-Device AI Market Overview</text>
-  <text x='102' y='406' fill='#374151' font-size='17' font-family='Inter, sans-serif'>On-device AI is moving from experimental features into mainstream products.</text>
-  <text x='102' y='434' fill='#374151' font-size='17' font-family='Inter, sans-serif'>Falling model sizes and better NPUs are accelerating adoption across mobile and edge devices.</text>
+  <circle cx='680' cy='242' r='16' fill='white'/>
+  <circle cx='680' cy='242' r='5' fill='#0a0a0b'/>
+  <text x='680' y='280' fill='white' font-size='11' font-family='DM Sans, sans-serif' font-weight='600' text-anchor='middle' letter-spacing='0.1em'>WRITING</text>
+
+  <!-- Content Block -->
+  <rect x='320' y='400' width='880' height='320' rx='20' fill='white' fill-opacity='0.02' stroke='white' stroke-opacity='0.05' stroke-width='1'/>
+  <rect x='360' y='440' width='300' height='20' rx='4' fill='white' fill-opacity='0.05'/>
+  <rect x='360' y='480' width='800' height='8' rx='4' fill='white' fill-opacity='0.03'/>
+  <rect x='360' y='504' width='760' height='8' rx='4' fill='white' fill-opacity='0.03'/>
+  <rect x='360' y='528' width='600' height='8' rx='4' fill='white' fill-opacity='0.03'/>
 </svg>
 `);
 
@@ -51,55 +77,68 @@ const HERO_SRC = `data:image/svg+xml;charset=utf-8,${HERO_SVG}`;
 
 export default function HeroSection(): JSX.Element {
   return (
-    <section className="px-4 pb-12 pt-12 sm:px-6 lg:pb-16 lg:pt-20">
+    <section className="relative overflow-hidden px-6 pb-24 pt-32 lg:pb-32 lg:pt-48">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center">
-        <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-4xl flex-col items-center text-center max-lg:min-h-0">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1 text-sm text-neutral-500">
-            <span aria-hidden="true">✦</span>
+        <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center animate-glass-enter">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/05 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur-md">
+            <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
             AI-powered research &amp; writing
           </span>
 
-          <h1 className="mt-6 text-3xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-5xl">
-            Market research reports, <span className="text-indigo-600">written by AI</span> in minutes.
+          <h1 className="mt-12 text-[52px] font-semibold tracking-tight text-white sm:text-[84px] sm:leading-[0.95]">
+            Market research reports, <br className="hidden sm:block"/>
+            <span className="text-display text-white/30">written by AI</span> in minutes.
           </h1>
 
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-neutral-600 sm:text-lg">
+          <p className="mt-8 max-w-2xl text-[18px] leading-relaxed text-[var(--text-secondary)] sm:text-[22px] font-light">
             Give Studio a topic. A team of AI agents researches the web, builds a strategy, writes the
-            report, and fact-checks every claim - automatically. You get a polished PDF in under 90
-            seconds.
+            report, and fact-checks every claim — automatically.
           </p>
 
-          <div className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row">
-            <Link
-              href="/auth/signup"
-              className="inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-6 py-3 text-base font-medium text-white transition hover:bg-indigo-700 sm:w-auto"
-            >
-              Generate your first report -&gt;
+          <div className="mt-12 flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row">
+            <Link href="/auth/signup" passHref legacyBehavior>
+              <Button 
+                size="lg" 
+                className="w-full sm:w-auto !rounded-full !h-[64px] px-14 bg-white text-black hover:bg-white/95 shadow-[0_8px_32px_rgba(255,255,255,0.2)] hover:shadow-[0_16px_48px_rgba(255,255,255,0.3)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] font-bold text-[16px] sm:text-[17px]"
+              >
+                Generate your first report
+              </Button>
             </Link>
-            <Link
-              href="#example-report"
-              className="inline-flex w-full items-center justify-center rounded-lg border border-neutral-300 px-6 py-3 text-base font-medium text-neutral-700 transition hover:bg-neutral-50 sm:w-auto"
-            >
-              See a sample report
+            <Link href="#example-report" passHref legacyBehavior>
+              <Button 
+                variant="secondary" 
+                size="lg" 
+                className="w-full sm:w-auto !rounded-full !h-[64px] px-12 border border-white/20 bg-white/[0.05] text-white hover:bg-white/[0.12] hover:border-white/30 shadow-[0_4px_12px_rgba(255,255,255,0.08)] transition-all duration-300 active:scale-[0.98] font-semibold text-[16px] sm:text-[17px]"
+              >
+                See a sample report
+              </Button>
             </Link>
           </div>
 
-          <p className="mt-4 text-sm text-neutral-500">
-            Free forever · No credit card required · 2 reports per month
-          </p>
+          <div className="mt-12 inline-flex items-center gap-2.5 rounded-full border border-emerald-500/40 bg-emerald-500/[0.12] px-6 py-3 backdrop-blur-md hover:border-emerald-500/50 hover:bg-emerald-500/[0.15] transition-all duration-300">
+            <Star className="h-5 w-5 text-emerald-400 fill-emerald-400" />
+            <p className="text-[15px] sm:text-[16px] font-semibold text-emerald-300 tracking-wide">
+              Free forever · No credit card required · 2 reports per month
+            </p>
+          </div>
+
         </div>
 
-        <div className="mt-8 w-full max-w-6xl [transform:perspective(1000px)_rotateX(5deg)]">
-          <Image
-            src={HERO_SRC}
-            alt="Studio report generation dashboard preview"
-            width={1280}
-            height={820}
-            priority
-            className="h-auto w-full rounded-2xl shadow-2xl"
-          />
+        <div className="mt-24 w-full max-w-[1200px] relative">
+          <div className="absolute -inset-4 rounded-[2rem] bg-white/[0.02] blur-2xl -z-10"></div>
+          <div className="glass-card !bg-transparent !p-0 overflow-hidden !rounded-[2rem] shadow-2xl">
+            <Image
+              src={HERO_SRC}
+              alt="Studio report generation dashboard preview"
+              width={1280}
+              height={820}
+              priority
+              className="relative h-auto w-full opacity-90"
+            />
+          </div>
         </div>
       </div>
     </section>
   );
 }
+

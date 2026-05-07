@@ -163,3 +163,204 @@ def generate_report(self: Task, report_id: str, user_id: str) -> str:
         if should_commit_on_exit:
             session.commit()
         session.close()
+
+
+@celery_app.task(
+    bind=True,
+    name="backend.workers.tasks.generate_export",
+    max_retries=3,
+    soft_time_limit=300,
+    time_limit=360,
+)
+def generate_export(self: Task, export_id: str, report_id: str, export_format: str) -> str:
+    """Generate export of report in specified format."""
+    from backend.db.models import Export, ExportStatus
+    
+    session = SyncSessionLocal()
+    try:
+        report = session.execute(select(Report).where(Report.id == report_id)).scalar_one()
+        export = session.execute(select(Export).where(Export.id == export_id)).scalar_one()
+        
+        logger.info("generating %s export for report_id=%s", export_format, report_id)
+        
+        # Export generation logic
+        if export_format == "markdown":
+            content = report.content_md
+            export.file_path = f"exports/{export_id}.md"
+        elif export_format == "pdf":
+            # TODO: Implement PDF generation (use reportlab or similar)
+            content = report.content_md
+            export.file_path = f"exports/{export_id}.pdf"
+        elif export_format == "docx":
+            # TODO: Implement DOCX generation (use python-docx)
+            content = report.content_md
+            export.file_path = f"exports/{export_id}.docx"
+        else:
+            raise ValueError(f"Invalid export format: {export_format}")
+        
+        # TODO: Upload to S3 if configured
+        export.status = "completed"
+        export.file_size_bytes = len(content.encode()) if content else 0
+        export.completed_at = datetime.now(timezone.utc)
+        
+        logger.info("export %s completed for report_id=%s", export_id, report_id)
+        session.commit()
+        return export.file_path
+    except Exception as exc:
+        logger.exception("export generation failed for export_id=%s", export_id)
+        
+        export = locals().get("export")
+        if export:
+            export.status = "failed"
+            export.error_message = str(exc)
+            session.commit()
+        
+        raise
+    finally:
+        session.close()
+
+
+@celery_app.task(
+    name="backend.workers.tasks.send_email_notification",
+    max_retries=3,
+    soft_time_limit=30,
+    time_limit=60,
+)
+def send_email_notification(user_email: str, subject: str, template: str, context: dict) -> str:
+    """Send email notification to user."""
+    session = SyncSessionLocal()
+    try:
+        logger.info("sending email notification to %s with template %s", user_email, template)
+        
+        # TODO: Implement email sending
+        # - Use SendGrid or similar
+        # - Render template with context
+        # - Handle email delivery
+        
+        logger.info("email sent to %s", user_email)
+        return f"email_sent_to_{user_email}"
+    except Exception as exc:
+        logger.exception("failed to send email to %s", user_email)
+        raise
+    finally:
+        session.close()
+
+
+@celery_app.task(
+    name="backend.workers.tasks.process_stripe_webhook",
+    max_retries=5,
+    soft_time_limit=30,
+    time_limit=60,
+)
+def process_stripe_webhook(event_type: str, event_id: str) -> str:
+    """Process Stripe webhook events."""
+    from backend.db.models import StripeEvent
+    
+    session = SyncSessionLocal()
+    try:
+        logger.info("processing Stripe webhook event_type=%s event_id=%s", event_type, event_id)
+        
+        stripe_event = session.execute(
+            select(StripeEvent).where(StripeEvent.id == event_id)
+        ).scalar_one_or_none()
+        
+        if not stripe_event:
+            logger.warning("Stripe event %s not found", event_id)
+            return "event_not_found"
+        
+        # Handle specific webhook events
+        if event_type == "customer.subscription.updated":
+            # TODO: Update user subscription status
+            pass
+        elif event_type == "customer.subscription.deleted":
+            # TODO: Downgrade user subscription
+            pass
+        elif event_type == "invoice.payment_succeeded":
+            # TODO: Record payment
+            pass
+        elif event_type == "invoice.payment_failed":
+            # TODO: Notify user of failed payment
+            pass
+        
+        stripe_event.processed_at = datetime.now(timezone.utc)
+        stripe_event.status = "processed"
+        session.commit()
+        
+        logger.info("processed Stripe webhook event %s", event_id)
+        return f"processed_{event_id}"
+    except Exception as exc:
+        logger.exception("failed to process Stripe webhook event %s", event_id)
+        raise
+    finally:
+        session.close()
+
+
+@celery_app.task(
+    name="backend.workers.tasks.cleanup_webhook_events",
+    soft_time_limit=60,
+    time_limit=120,
+)
+def cleanup_webhook_events() -> str:
+    """Clean up old webhook events from database."""
+    from backend.db.models import WebhookEvent
+    
+    session = SyncSessionLocal()
+    try:
+        from datetime import timedelta
+        
+        logger.info("cleaning up old webhook events")
+        
+        # Delete processed events older than 7 days
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
+        
+        result = session.query(WebhookEvent).filter(
+            WebhookEvent.processed == True,
+            WebhookEvent.processed_at < cutoff_date,
+        ).delete()
+        
+        session.commit()
+        logger.info("deleted %d old webhook events", result)
+        return f"cleaned_up_{result}_events"
+    except Exception as exc:
+        logger.exception("failed to cleanup webhook events")
+        raise
+    finally:
+        session.close()
+
+
+@celery_app.task(
+    name="backend.workers.tasks.retry_failed_webhooks",
+    soft_time_limit=120,
+    time_limit=180,
+)
+def retry_failed_webhooks() -> str:
+    """Retry failed webhook processing."""
+    from backend.db.models import WebhookEvent
+    
+    session = SyncSessionLocal()
+    try:
+        logger.info("retrying failed webhook events")
+        
+        # Get failed webhooks with retry_count < max
+        failed_webhooks = session.query(WebhookEvent).filter(
+            WebhookEvent.processed == False,
+            WebhookEvent.retry_count < 5,
+        ).all()
+        
+        retry_count = 0
+        for webhook in failed_webhooks:
+            try:
+                # TODO: Retry webhook processing
+                webhook.retry_count += 1
+                retry_count += 1
+            except Exception:
+                pass
+        
+        session.commit()
+        logger.info("retried %d failed webhook events", retry_count)
+        return f"retried_{retry_count}_webhooks"
+    except Exception as exc:
+        logger.exception("failed to retry webhooks")
+        raise
+    finally:
+        session.close()

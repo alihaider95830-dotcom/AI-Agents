@@ -103,7 +103,7 @@ describe("Landing page sections", () => {
 
   it("test_navbar_get_started_links_to_signup", () => {
     render(<NavBar />);
-    const signupLink = screen.getByRole("link", { name: /get started free/i });
+    const signupLink = screen.getByRole("link", { name: /get started/i });
     expect(signupLink).toHaveAttribute("href", "/auth/signup");
   });
 

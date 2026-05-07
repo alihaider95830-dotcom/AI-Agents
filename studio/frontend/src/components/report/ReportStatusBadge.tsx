@@ -3,19 +3,19 @@ import { cn } from "@/lib/utils";
 
 const statusClasses: Record<ReportStatus, string> = {
   pending:
-    "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700",
+    "bg-white/05 text-[var(--text-tertiary)] border-white/10",
   running:
-    "animate-pulse bg-blue-100 text-blue-700 ring-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:ring-blue-800",
+    "animate-pulse bg-[var(--status-info)] text-[var(--status-info-text)] border-[var(--status-info-text)]/20",
   done:
-    "bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:ring-emerald-800",
+    "bg-[var(--status-success)] text-[var(--status-success-text)] border-[var(--status-success-text)]/20",
   failed:
-    "bg-red-100 text-red-700 ring-red-200 dark:bg-red-950 dark:text-red-200 dark:ring-red-800",
+    "bg-[var(--status-error)] text-[var(--status-error-text)] border-[var(--status-error-text)]/20",
 };
 
 const statusLabels: Record<ReportStatus, string> = {
   pending: "Pending",
-  running: "Generating...",
-  done: "Done",
+  running: "Generating",
+  done: "Ready",
   failed: "Failed",
 };
 
@@ -30,7 +30,7 @@ export const ReportStatusBadge = ({
 }: ReportStatusBadgeProps): JSX.Element => (
   <span
     className={cn(
-      "inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1",
+      "inline-flex w-fit items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.06em] backdrop-blur-sm",
       statusClasses[status],
       className,
     )}

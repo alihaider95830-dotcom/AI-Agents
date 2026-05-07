@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/Button";
 import { useSupabaseAccessToken } from "@/hooks/useSupabaseAccessToken";
 import {
   deleteReport,
@@ -36,12 +37,12 @@ interface ReportListProps {
 
 const ReportCardSkeleton = (): JSX.Element => (
   <div
-    className="h-36 animate-pulse rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950"
+    className="glass-card h-36 animate-pulse p-6 border-white/05"
     data-testid="report-card-skeleton"
   >
-    <div className="h-4 w-1/3 rounded bg-slate-200 dark:bg-slate-800" />
-    <div className="mt-4 h-3 w-3/4 rounded bg-slate-200 dark:bg-slate-800" />
-    <div className="mt-6 h-8 w-full rounded bg-slate-200 dark:bg-slate-800" />
+    <div className="h-4 w-1/3 rounded bg-white/05" />
+    <div className="mt-4 h-3 w-3/4 rounded bg-white/05" />
+    <div className="mt-8 h-8 w-full rounded bg-white/05" />
   </div>
 );
 
@@ -76,60 +77,64 @@ const ReportCard = ({
   };
 
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-slate-700">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="truncate text-base font-semibold text-slate-950 dark:text-slate-50">
+    <article className="glass-card p-6 border-white/05 relative overflow-hidden glass-scanline group">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between relative z-10">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-[17px] font-bold tracking-tight text-white group-hover:text-white/90 transition-colors">
               {report.title}
             </h2>
             <ReportStatusBadge status={report.status} />
           </div>
-          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-            {truncateText(report.topic, 80)}
+          <p className="mt-2 text-[14px] leading-relaxed text-[var(--text-secondary)] opacity-80">
+            {truncateText(report.topic, 120)}
           </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <Link
-            aria-label={`View ${report.title}`}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-100 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
-            href={`/reports/${report.id}`}
-          >
-            <Eye className="h-4 w-4" />
+          <Link href={`/reports/${report.id}`} passHref legacyBehavior>
+            <Button
+              aria-label={`View ${report.title}`}
+              size="sm"
+              variant="secondary"
+              className="!rounded-full !bg-white/05 hover:!bg-white/10 btn-glow"
+            >
+              <Eye className="h-4 w-4" />
+              <span>VIEW_PROTOCOL</span>
+            </Button>
           </Link>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button
+              <Button
                 aria-label={`Delete ${report.title}`}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-700 transition hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950"
-                type="button"
+                size="sm"
+                variant="ghost"
+                className="!p-2 h-8 w-8 !rounded-full text-red-400/40 hover:bg-red-500/10 hover:text-red-300 transition-all"
               >
                 <Trash2 className="h-4 w-4" />
-              </button>
+              </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="glass-modal">
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete this report?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This removes the report from your history. This action cannot
-                  be undone.
+                <AlertDialogTitle className="text-[20px]">Purge Record?</AlertDialogTitle>
+                <AlertDialogDescription className="text-[var(--text-secondary)]">
+                  This action permanently deletes the report metadata and generated content from your workspace.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900">
-                  Cancel
+              <AlertDialogFooter className="mt-6">
+                <AlertDialogCancel className="bg-transparent border-white/10 text-[var(--text-secondary)] hover:bg-white/05 hover:text-white rounded-[var(--radius-md)]">
+                  CANCEL
                 </AlertDialogCancel>
                 <AlertDialogAction
-                  className="inline-flex h-10 items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-50"
+                  className="bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 rounded-[var(--radius-md)]"
                   disabled={isDeleting}
                   onClick={(event) => {
                     event.preventDefault();
                     void handleDelete();
                   }}
                 >
-                  Delete report
+                  PURGE_ASSET
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -137,13 +142,19 @@ const ReportCard = ({
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700 dark:bg-slate-900 dark:text-slate-200">
-          {formatReportType(report.report_type)}
+      <div className="mt-6 flex flex-wrap items-center gap-4 relative z-10">
+        <span className="rounded-full bg-white/05 border border-white/05 px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--text-tertiary)] font-mono">
+          TYPE: {formatReportType(report.report_type)}
         </span>
-        <span>{formatReportDate(report.created_at)}</span>
+        <div className="h-1 w-1 rounded-full bg-white/10"></div>
+        <span className="text-[11px] text-[var(--text-tertiary)] font-medium font-mono uppercase">
+          {formatReportDate(report.created_at)}
+        </span>
         {report.word_count ? (
-          <span>{report.word_count.toLocaleString()} words</span>
+          <>
+            <div className="h-1 w-1 rounded-full bg-white/10"></div>
+            <span className="text-[11px] text-[var(--text-tertiary)] font-bold font-mono uppercase">{report.word_count.toLocaleString()} WORDS</span>
+          </>
         ) : null}
       </div>
     </article>
@@ -186,18 +197,21 @@ export const ReportList = ({ initialData }: ReportListProps): JSX.Element => {
 
   if (!isLoading && data.items.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center dark:border-slate-700 dark:bg-slate-950">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-          <FileText className="h-7 w-7" />
+      <div className="glass-card border-dashed p-16 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[var(--radius-xl)] bg-white/05 text-[var(--text-tertiary)]">
+          <FileText className="h-8 w-8" />
         </div>
-        <h2 className="mt-5 text-lg font-semibold text-slate-950 dark:text-slate-50">
-          No reports yet
+        <h2 className="mt-8 text-[20px] font-semibold text-[var(--text-primary)]">
+          Your library is empty
         </h2>
-        <Link
-          className="mt-5 inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-          href="/generate"
-        >
-          Generate your first report
+        <p className="mt-2 text-[15px] text-[var(--text-secondary)]">Generate a report to see it appear here.</p>
+        <Link href="/generate" passHref legacyBehavior>
+          <Button
+            className="mt-8"
+            variant="primary"
+          >
+            New report
+          </Button>
         </Link>
       </div>
     );
@@ -221,30 +235,30 @@ export const ReportList = ({ initialData }: ReportListProps): JSX.Element => {
         ))
       )}
 
-      <div className="flex items-center justify-center gap-3 pt-2">
-        <button
-          className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
+      <div className="flex items-center justify-center gap-6 pt-10">
+        <Button
+          variant="secondary"
+          size="sm"
           disabled={data.page <= 1 || isLoading}
           onClick={() => {
             void loadPage(data.page - 1);
           }}
-          type="button"
         >
           Previous
-        </button>
-        <span className="text-sm text-slate-500 dark:text-slate-400">
-          Page {data.page} of {totalPages}
+        </Button>
+        <span className="text-[11px] font-mono font-medium uppercase tracking-[0.1em] text-[var(--text-tertiary)]">
+          {data.page} <span className="opacity-30">/</span> {totalPages}
         </span>
-        <button
-          className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
+        <Button
+          variant="secondary"
+          size="sm"
           disabled={data.page >= totalPages || isLoading}
           onClick={() => {
             void loadPage(data.page + 1);
           }}
-          type="button"
         >
           Next
-        </button>
+        </Button>
       </div>
     </div>
   );

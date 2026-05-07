@@ -28,7 +28,12 @@ export default function DashboardLayout({
   if (isLoading || !isAuthenticated || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <LoaderCircle className="h-10 w-10 animate-spin text-brand-ocean dark:text-brand-gold" />
+        <div className="flex flex-col items-center gap-4">
+          <LoaderCircle className="h-10 w-10 animate-spin text-white/20" />
+          <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-tertiary)] animate-pulse">
+            Initializing Workspace
+          </p>
+        </div>
       </div>
     );
   }
@@ -36,12 +41,14 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       <Sidebar onLogout={logout} user={user} />
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen flex-1 flex-col overflow-hidden">
         <Topbar user={user} />
-        <PaymentWarningBoundary />
-        <main className="flex-1 bg-white/50 p-6 dark:bg-slate-950/40">
-          {children}
-        </main>
+        <div className="flex-1 overflow-y-auto">
+          <PaymentWarningBoundary />
+          <main className="p-8 max-w-[1400px] mx-auto w-full">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );

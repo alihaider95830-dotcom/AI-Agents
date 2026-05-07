@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { ReportPolling } from "@/components/report/ReportPolling";
 import { ReportViewer } from "@/components/report/ReportViewer";
+import { Button } from "@/components/ui/Button";
 import { ApiError } from "@/lib/api/client";
 import { getJob } from "@/lib/api/jobs";
 import { getReport, type ReportStatus } from "@/lib/api/reports";
@@ -15,19 +16,21 @@ interface ReportPageProps {
 }
 
 const ReportNotFound = (): JSX.Element => (
-  <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
-    <div className="max-w-md text-center">
-      <h1 className="text-2xl font-semibold text-slate-950 dark:text-slate-50">
+  <main className="flex min-h-[60vh] items-center justify-center px-4">
+    <div className="glass-elevated max-w-md p-10 text-center animate-glass-enter">
+      <h1 className="text-[20px] font-semibold text-[var(--text-primary)]">
         Report not found
       </h1>
-      <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+      <p className="mt-3 text-[15px] leading-relaxed text-[var(--text-secondary)]">
         The report may have been deleted, or you may not have access to it.
       </p>
-      <Link
-        className="mt-6 inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-        href="/dashboard"
-      >
-        Back to dashboard
+      <Link href="/dashboard" passHref legacyBehavior>
+        <Button
+          className="mt-8"
+          variant="primary"
+        >
+          Back to dashboard
+        </Button>
       </Link>
     </div>
   </main>

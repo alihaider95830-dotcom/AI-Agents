@@ -24,6 +24,17 @@ jest.mock("sonner", () => ({
 
 jest.mock("@/lib/api", () => ({
   AUTH_TOKEN_STORAGE_KEY: "ai-report-token",
+  DEMO_ACCESS_TOKEN: "demo-access-token",
+  DEMO_LOGIN_EMAIL: "demo@studio.local",
+  DEMO_LOGIN_PASSWORD: "DemoPassword123!",
+  DEMO_USER: {
+    id: "demo-user",
+    email: "demo@studio.local",
+    full_name: "Demo User",
+    tier: "pro",
+    credits: 999,
+  },
+  isDemoLoginCredentials: jest.fn(() => false),
   redirectToLogin: jest.fn(),
   authApi: {
     login: jest.fn(),

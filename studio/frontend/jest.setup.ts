@@ -27,3 +27,26 @@ Object.defineProperty(navigator, "clipboard", {
 });
 
 Element.prototype.scrollIntoView = jest.fn();
+
+// Prevent accidental real network requests during tests.
+// Tests should explicitly mock network calls (MSW or jest mocks).
+const networkErrorMessage =
+  "Network requests are disabled during tests. Mock fetch/axios or use MSW.";
+
+const throwNetworkError = () =>
+  Promise.reject(new Error(networkErrorMessage));
+
+;(global as any).fetch = jest.fn().mockImplementation(() => throwNetworkError());
+(window as any).fetch = (global as any).fetch;
+
+// If code uses XMLHttpRequest directly, make it fail fast as well.
+class _XHRStub {
+  open() {
+    /* noop */
+  }
+  send() {
+    throw new Error(networkErrorMessage);
+  }
+}
+
+(window as any).XMLHttpRequest = _XHRStub;

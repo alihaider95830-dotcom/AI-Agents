@@ -54,61 +54,57 @@ export const TopicForm = ({
 
   return (
     <form
-      className="rounded-[1.75rem] border border-slate-200/70 bg-white/85 p-6 shadow-panel transition-all duration-300 dark:border-slate-800 dark:bg-slate-950/80 sm:p-8"
+      className="glass-card p-10 bg-white/[0.03] border-white/05 transition-all duration-500 relative overflow-hidden glass-scanline"
       onSubmit={handleFormSubmit}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between relative z-10">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-brand-ocean dark:text-brand-gold">
-            Start a report
-          </p>
-          <h1 className="mt-2 font-[var(--font-heading)] text-3xl font-semibold text-slate-900 dark:text-white">
-            Tell the crew what to research
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/05 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)] backdrop-blur-sm">
+            MISSION_CONTROL
+          </span>
+          <h1 className="mt-6 text-[38px] font-bold tracking-tight text-white leading-[1.1]">
+            Research Initialization
           </h1>
         </div>
-        <p className="rounded-full bg-brand-mist px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brand-ink dark:bg-slate-800 dark:text-slate-100">
-          {creditsRemaining} credits left
-        </p>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-12 relative z-10">
         <label
-          className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200"
+          className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] font-mono"
           htmlFor="topic"
         >
-          <span>Topic</span>
-          <textarea
-            className={[
-              "min-h-[180px] rounded-[1.5rem] border bg-white/90 px-4 py-4 text-sm text-slate-900 shadow-sm outline-none transition-all",
-              "placeholder:text-slate-400 focus:border-brand-ocean focus:ring-2 focus:ring-brand-ocean/20",
-              "dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100 dark:placeholder:text-slate-500",
-              errors.topic
-                ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20"
-                : "border-slate-200",
-            ].join(" ")}
-            id="topic"
-            maxLength={500}
-            placeholder="e.g. The future of renewable energy in Southeast Asia"
-            {...register("topic")}
-          />
+          INPUT_TARGET_SPECIFICATION
         </label>
-        <div className="mt-2 flex items-center justify-between text-xs">
-          <span className="font-medium text-rose-500">{errors.topic?.message}</span>
-          <span className="text-slate-500 dark:text-slate-400">
-            {topic.length}/500
+        <textarea
+          className={[
+            "mt-4 min-h-[180px] w-full rounded-[var(--radius-lg)] border border-white/05 bg-black/40 px-6 py-5 text-[16px] text-white outline-none transition-all duration-300 shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]",
+            "placeholder:text-[var(--text-tertiary)] placeholder:opacity-50 focus:border-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.02)]",
+            errors.topic
+              ? "border-red-500/20 focus:border-red-500/40"
+              : "",
+          ].join(" ")}
+          id="topic"
+          maxLength={500}
+          placeholder="Enter objective parameters (e.g. Analysis of Quantum Computing Scalability in 2026)..."
+          {...register("topic")}
+        />
+        <div className="mt-4 flex items-center justify-between text-[10px] font-bold tracking-[0.1em] font-mono">
+          <span className="text-red-400/60 uppercase">{errors.topic?.message}</span>
+          <span className="text-[var(--text-tertiary)] uppercase opacity-60">
+            BUFFER: {topic.length} / 500
           </span>
         </div>
       </div>
 
-      <fieldset className="mt-8">
-        <legend className="text-sm font-medium text-slate-700 dark:text-slate-200">
-          Report type
+      <fieldset className="mt-14 relative z-10">
+        <legend className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] font-mono">
+          ANALYSIS_PROTOCOL_LENS
         </legend>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {REPORT_TYPE_OPTIONS.map((option) => (
             <label
               key={option.value}
-              className="cursor-pointer"
+              className="cursor-pointer group"
               htmlFor={option.value}
             >
               <input
@@ -118,34 +114,34 @@ export const TopicForm = ({
                 value={option.value}
                 {...register("report_type")}
               />
-              <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 text-sm font-medium text-slate-600 transition-all duration-200 peer-checked:border-brand-ocean peer-checked:bg-brand-mist peer-checked:text-brand-ink peer-focus-visible:ring-2 peer-focus-visible:ring-brand-ocean/30 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:peer-checked:border-brand-gold dark:peer-checked:bg-slate-800 dark:peer-checked:text-white">
-                {option.label}
+              <div className="flex h-full flex-col rounded-[var(--radius-md)] border border-white/05 bg-white/02 p-6 transition-all duration-500 peer-checked:bg-white peer-checked:border-white group-hover:border-white/10 group-hover:bg-white/05 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                <span className="text-[14px] font-bold capitalize text-white peer-checked:text-black transition-colors">
+                  {option.label}
+                </span>
+                <span className="mt-2 text-[10px] font-bold text-[var(--text-tertiary)] peer-checked:text-black/60 transition-colors uppercase tracking-widest font-mono">
+                  {option.value}_MODE
+                </span>
               </div>
             </label>
           ))}
         </div>
-        {errors.report_type?.message ? (
-          <p className="mt-2 text-xs font-medium text-rose-500">
-            {errors.report_type.message}
-          </p>
-        ) : null}
       </fieldset>
 
-      <div className="mt-8 space-y-3">
+      <div className="mt-16 flex flex-col items-center gap-8 sm:flex-row relative z-10">
         <Button
-          className="w-full sm:w-auto"
+          className="h-14 px-16 !rounded-full text-[16px] font-bold btn-glow shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(255,255,255,0.2)]"
           disabled={creditsRemaining === 0}
           isLoading={isLoading}
-          size="lg"
           type="submit"
+          variant="primary"
         >
-          {isLoading ? "Generating..." : "Generate Report"}
+          {isLoading ? "INITIATING_PROTOCOL..." : "LAUNCH_RESEARCH_CREW"}
         </Button>
-        {creditsRemaining === 0 ? (
-          <p className="text-sm font-medium text-amber-600 dark:text-amber-300">
-            No credits remaining
+        {creditsRemaining === 0 && (
+          <p className="text-[12px] font-bold text-red-400 uppercase tracking-widest font-mono">
+            STATUS: INSUFFICIENT_CREDITS
           </p>
-        ) : null}
+        )}
       </div>
     </form>
   );
