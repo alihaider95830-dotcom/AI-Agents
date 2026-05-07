@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { DEMO_LOGIN_EMAIL, DEMO_LOGIN_PASSWORD } from "@/lib/api";
 import { useSession } from "@/hooks/useSession";
 import { useAuthStore } from "@/store/authStore";
 
@@ -50,44 +51,62 @@ export default function LoginPage(): JSX.Element {
   });
 
   return (
-    <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-8 shadow-panel dark:border-slate-800 dark:bg-slate-950/80">
-      <p className="text-xs uppercase tracking-[0.35em] text-brand-ocean dark:text-brand-gold">
+    <div className="p-4 sm:p-0">
+      <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/05 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur-sm">
         Welcome back
-      </p>
-      <h2 className="mt-3 font-[var(--font-heading)] text-3xl font-semibold text-slate-900 dark:text-white">
-        Sign in to your workspace
+      </span>
+      <h2 className="mt-8 text-[26px] font-semibold tracking-tight text-white">
+        Sign in to Studio
       </h2>
-      <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+      <p className="mt-3 text-[15px] text-[var(--text-secondary)] leading-relaxed">
         Pick up where your report pipeline left off.
       </p>
 
-      <form className="mt-8 space-y-5" onSubmit={onSubmit}>
+      <div className="mt-8 rounded-[var(--radius-lg)] border border-dashed border-white/10 bg-white/02 p-5 text-[13px] text-[var(--text-secondary)]">
+        <p className="font-semibold text-white/60 uppercase tracking-wider text-[11px]">Demo credentials</p>
+        <div className="mt-3 space-y-1 font-mono">
+          <p>Email: <span className="text-white/80">{DEMO_LOGIN_EMAIL}</span></p>
+          <p>Pass:  <span className="text-white/80">{DEMO_LOGIN_PASSWORD}</span></p>
+        </div>
+      </div>
+
+      <form className="mt-10 space-y-6" onSubmit={onSubmit}>
         <Input
           autoComplete="email"
           error={errors.email?.message}
-          label="Email"
+          label="Email Address"
           placeholder="you@company.com"
           register={register("email")}
           type="email"
         />
-        <Input
-          autoComplete="current-password"
-          error={errors.password?.message}
-          label="Password"
-          placeholder="Enter your password"
-          register={register("password")}
-          type="password"
-        />
+        <div className="space-y-2">
+          <div className="flex items-center justify-between px-1">
+            <label className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-tertiary)]" htmlFor="password">
+              Password
+            </label>
+            <Link href="/forgot-password" size="sm" className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-tertiary)] hover:text-white transition-colors">
+              Forgot?
+            </Link>
+          </div>
+          <Input
+            autoComplete="current-password"
+            error={errors.password?.message}
+            placeholder="Enter your password"
+            id="password"
+            register={register("password")}
+            type="password"
+          />
+        </div>
 
-        <Button className="w-full" isLoading={isLoading} type="submit">
+        <Button className="w-full !rounded-full mt-2" isLoading={isLoading} type="submit" variant="primary">
           Sign in
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+      <p className="mt-10 text-center text-[14px] text-[var(--text-secondary)]">
         New here?{" "}
         <Link
-          className="font-semibold text-brand-ocean hover:text-brand-ink dark:text-brand-gold dark:hover:text-amber-200"
+          className="font-semibold text-white hover:underline underline-offset-4"
           href="/register"
         >
           Create an account

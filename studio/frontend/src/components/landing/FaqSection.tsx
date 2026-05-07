@@ -52,22 +52,27 @@ const faqs = [
 
 export default function FaqSection(): JSX.Element {
   return (
-    <section className="px-4 py-16 sm:px-6" aria-labelledby="faq-heading">
-      <div className="mx-auto w-full max-w-2xl">
-        <div className="text-center">
-          <h2 id="faq-heading" className="text-3xl font-semibold text-neutral-900">
+    <section className="px-6 py-32 sm:py-48" aria-labelledby="faq-heading">
+      <div className="mx-auto w-full max-w-3xl">
+        <div className="text-center mb-16 animate-glass-enter">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/05 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur-sm">
+            Common questions
+          </span>
+          <h2 id="faq-heading" className="mt-8 text-[34px] font-semibold tracking-tight text-white sm:text-[40px]">
             Frequently asked questions
           </h2>
         </div>
 
-        <Accordion type="single" collapsible className="mt-8 w-full">
-          {faqs.map((faq, index) => (
-            <AccordionItem key={faq.question} value={`item-${index + 1}`}>
-              <AccordionTrigger>{faq.question}</AccordionTrigger>
-              <AccordionContent>{faq.answer}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <div className="glass-card !bg-white/[0.02] p-8 md:p-12">
+          <Accordion type="single" collapsible className="w-full">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={faq.question} value={`item-${index + 1}`}>
+                <AccordionTrigger>{faq.question}</AccordionTrigger>
+                <AccordionContent>{faq.answer}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </div>
     </section>
   );

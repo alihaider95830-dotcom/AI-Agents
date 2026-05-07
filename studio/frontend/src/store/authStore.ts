@@ -4,8 +4,11 @@ import { create } from "zustand";
 
 import {
   AUTH_TOKEN_STORAGE_KEY,
+  DEMO_ACCESS_TOKEN,
+  DEMO_USER,
   authApi,
   redirectToLogin,
+  isDemoLoginCredentials,
   type User,
 } from "@/lib/api";
 
@@ -61,6 +64,16 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
     set({ isLoading: true });
 
     try {
+      if (isDemoLoginCredentials(email, password)) {
+        setStoredToken(DEMO_ACCESS_TOKEN);
+        set({
+          user: DEMO_USER,
+          token: DEMO_ACCESS_TOKEN,
+          isAuthenticated: true,
+        });
+        return;
+      }
+
       const { access_token } = await authApi.login(email, password);
       setStoredToken(access_token);
       set({
@@ -117,6 +130,14 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
     set({ isLoading: true });
 
     try {
+      if (get().token === DEMO_ACCESS_TOKEN) {
+        set({
+          user: DEMO_USER,
+          isAuthenticated: true,
+        });
+        return;
+      }
+
       const user = await authApi.me();
       set({
         user,
@@ -149,6 +170,16 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
         token: null,
         isLoading: false,
         isAuthenticated: false,
+      });
+      return;
+    }
+
+    if (storedToken === DEMO_ACCESS_TOKEN) {
+      set({
+        user: DEMO_USER,
+        token: DEMO_ACCESS_TOKEN,
+        isLoading: false,
+        isAuthenticated: true,
       });
       return;
     }

@@ -46,24 +46,24 @@ describe("PaymentWarningBanner", () => {
   it("test_renders_amber_banner_when_past_due", () => {
     render(<PaymentWarningBanner subscriptionStatus="past_due" />);
 
-    expect(screen.getByText(/Your payment failed/i)).toBeInTheDocument();
+    expect(screen.getByText(/payment failed/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /retry payment/i }),
+      screen.getByRole("button", { name: /retry/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /update payment method/i }),
+      screen.getByRole("button", { name: /fix payment/i }),
     ).toBeInTheDocument();
   });
 
   it("test_renders_blue_banner_when_paused", () => {
     render(<PaymentWarningBanner subscriptionStatus="paused" />);
 
-    expect(screen.getByText(/subscription is paused/i)).toBeInTheDocument();
+    expect(screen.getByText(/subscription paused/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /reactivate subscription/i }),
+      screen.getByRole("button", { name: /reactivate/i }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /retry payment/i }),
+      screen.queryByRole("button", { name: /retry/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -74,7 +74,7 @@ describe("PaymentWarningBanner", () => {
     });
 
     render(<PaymentWarningBanner subscriptionStatus="past_due" />);
-    fireEvent.click(screen.getByRole("button", { name: /retry payment/i }));
+    fireEvent.click(screen.getByRole("button", { name: /retry/i }));
 
     expect(
       await screen.findByText("Payment retried — check back shortly."),
@@ -85,7 +85,7 @@ describe("PaymentWarningBanner", () => {
     mockedRetryPayment.mockRejectedValue(new ApiError("Insufficient funds", 402));
 
     render(<PaymentWarningBanner subscriptionStatus="past_due" />);
-    fireEvent.click(screen.getByRole("button", { name: /retry payment/i }));
+    fireEvent.click(screen.getByRole("button", { name: /retry/i }));
 
     expect(await screen.findByText("Insufficient funds")).toBeInTheDocument();
   });
@@ -94,7 +94,7 @@ describe("PaymentWarningBanner", () => {
     mockedRetryPayment.mockReturnValue(new Promise(() => undefined));
 
     render(<PaymentWarningBanner subscriptionStatus="past_due" />);
-    const retryButton = screen.getByRole("button", { name: /retry payment/i });
+    const retryButton = screen.getByRole("button", { name: /retry/i });
     fireEvent.click(retryButton);
 
     await waitFor(() => {

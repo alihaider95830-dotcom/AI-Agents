@@ -166,19 +166,20 @@ describe("generate flow", () => {
     expect(
       screen.getByRole("button", { name: /generate report/i }),
     ).toBeDisabled();
-    expect(screen.getByText("No credits remaining")).toBeInTheDocument();
+    expect(screen.getByText(/credits remaining/i)).toBeInTheDocument();
+    expect(screen.getByText(/purchase more credits to continue research/i)).toBeInTheDocument();
   });
 
   it("test_agent_status_bar_stages", () => {
     render(<AgentStatusBar currentStage="planning" progress_pct={35} />);
 
-    expect(screen.getByTestId("agent-researcher-status")).toHaveTextContent(
+    expect(screen.getByTestId("agent-researching-status")).toHaveTextContent(
       "complete",
     );
-    expect(screen.getByTestId("agent-planner-status")).toHaveTextContent(
+    expect(screen.getByTestId("agent-planning-status")).toHaveTextContent(
       "active",
     );
-    expect(screen.getByTestId("agent-writer-status")).toHaveTextContent(
+    expect(screen.getByTestId("agent-writing-status")).toHaveTextContent(
       "waiting",
     );
     expect(screen.getByTestId("agent-qa-status")).toHaveTextContent("waiting");

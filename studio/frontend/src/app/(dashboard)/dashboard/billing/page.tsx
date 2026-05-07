@@ -98,7 +98,7 @@ function ManagePortalButton({ token }: { token: string }) {
 
   return (
     <button
-      className="inline-flex items-center gap-2 rounded-lg bg-brand-ocean px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-ink disabled:opacity-60 dark:bg-brand-gold dark:text-slate-900 dark:hover:bg-amber-400"
+      className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
       disabled={loading}
       id="manage-portal-btn"
       onClick={handleClick}
@@ -109,7 +109,7 @@ function ManagePortalButton({ token }: { token: string }) {
       ) : (
         <ExternalLink className="h-4 w-4" />
       )}
-      Manage in Stripe Portal
+      Manage in Stripe
     </button>
   );
 }
@@ -143,7 +143,7 @@ function UpgradePlanButton({ token }: { token: string }) {
 
   return (
     <button
-      className="inline-flex items-center gap-2 rounded-lg border border-brand-ocean px-4 py-2 text-sm font-semibold text-brand-ocean transition hover:bg-brand-ocean hover:text-white disabled:opacity-60 dark:border-brand-gold dark:text-brand-gold dark:hover:bg-brand-gold dark:hover:text-slate-900"
+      className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-6 py-2.5 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
       disabled={loading}
       id="upgrade-plan-btn"
       onClick={handleClick}
@@ -199,16 +199,18 @@ export default function BillingPage(): JSX.Element {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-brand-ocean dark:text-brand-gold" />
+        <Loader2 className="h-10 w-10 animate-spin text-zinc-900 dark:text-zinc-100" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
-        <AlertCircle className="h-10 w-10 text-red-500" />
-        <p className="text-slate-700 dark:text-slate-300">{error}</p>
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-center">
+        <div className="rounded-2xl bg-rose-50 p-4 dark:bg-rose-950/20">
+          <AlertCircle className="h-8 w-8 text-rose-500" />
+        </div>
+        <p className="text-zinc-600 dark:text-zinc-400 font-medium">{error}</p>
       </div>
     );
   }
@@ -216,65 +218,67 @@ export default function BillingPage(): JSX.Element {
   const isFree = subscription?.status === "none";
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 py-4">
+    <div className="mx-auto max-w-3xl space-y-8 py-4">
       {/* Header */}
       <div>
-        <h1 className="font-[var(--font-heading)] text-2xl font-semibold text-slate-900 dark:text-white">
-          Billing &amp; Subscription
+        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-white">
+          Billing & Subscription
         </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
           Manage your plan, credits, and payment method.
         </p>
       </div>
 
       {/* Plan overview */}
-      <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-ocean/10 dark:bg-brand-gold/10">
-              <CreditCard className="h-5 w-5 text-brand-ocean dark:text-brand-gold" />
+      <div className="rounded-[2.5rem] border border-zinc-200/60 bg-white/80 p-8 shadow-panel dark:border-zinc-800 dark:bg-zinc-950/80 sm:p-10">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800">
+              <CreditCard className="h-6 w-6 text-zinc-900 dark:text-zinc-100" />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                Current plan
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                Current Tier
               </p>
-              <p className="font-[var(--font-heading)] text-xl font-semibold text-slate-900 dark:text-white">
+              <p className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
                 {usage ? tierLabel(usage.tier) : "—"}
               </p>
             </div>
           </div>
-          {statusBadge(payment?.subscription_status)}
+          <div className="flex self-start">
+            {statusBadge(payment?.subscription_status)}
+          </div>
         </div>
 
         {/* Credits */}
         {usage && (
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900/40">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border border-zinc-100 bg-zinc-50/50 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                 Credits remaining
               </p>
-              <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+              <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">
                 {usage.credits_remaining}
               </p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900/40">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+            <div className="rounded-2xl border border-zinc-100 bg-zinc-50/50 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                 Reports this month
               </p>
-              <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+              <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">
                 {usage.reports_this_month}
                 {usage.monthly_limit !== null && (
-                  <span className="text-base font-normal text-slate-400">
+                  <span className="text-base font-medium text-zinc-400">
                     /{usage.monthly_limit}
                   </span>
                 )}
               </p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900/40">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Resets on
+            <div className="rounded-2xl border border-zinc-100 bg-zinc-50/50 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                Usage Reset
               </p>
-              <p className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <p className="mt-2 text-sm font-bold text-zinc-700 dark:text-zinc-200">
                 {usage.resets_on}
               </p>
             </div>
@@ -283,25 +287,25 @@ export default function BillingPage(): JSX.Element {
 
         {/* Subscription dates */}
         {subscription && !isFree && (
-          <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-300">
-            <span className="flex items-center gap-1">
+          <div className="mt-8 flex flex-wrap gap-6 text-sm">
+            <span className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              Renews:{" "}
-              <strong>
+              <span className="font-medium">Renews:</span>
+              <span className="font-bold text-zinc-900 dark:text-zinc-100">
                 {formatDate(subscription.current_period_end as number)}
-              </strong>
+              </span>
             </span>
             {subscription.cancel_at_period_end && (
-              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+              <span className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
                 <AlertCircle className="h-4 w-4" />
-                Cancels at period end
+                <span className="font-medium">Cancels at period end</span>
               </span>
             )}
           </div>
         )}
 
         {/* Actions */}
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-10 flex flex-wrap gap-4">
           {!isFree && token && <ManagePortalButton token={token} />}
           {isFree && token && <UpgradePlanButton token={token} />}
         </div>
@@ -309,20 +313,24 @@ export default function BillingPage(): JSX.Element {
 
       {/* Past-due warning */}
       {payment?.action_required && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-800/50 dark:bg-amber-950/30">
-          <p className="flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-400">
-            <AlertCircle className="h-5 w-5" /> Payment action required
-          </p>
-          <p className="mt-1 text-sm text-amber-600 dark:text-amber-300">
-            Your subscription is{" "}
-            <strong>{payment.subscription_status}</strong>. Please update your
-            payment method to avoid service interruption.
-          </p>
-          {token && (
-            <div className="mt-3">
-              <ManagePortalButton token={token} />
+        <div className="rounded-3xl border border-rose-100 bg-rose-50/50 p-6 shadow-sm dark:border-rose-900/30 dark:bg-rose-950/20">
+          <div className="flex items-start gap-4">
+            <div className="rounded-full bg-rose-100 p-2 dark:bg-rose-900/50">
+              <AlertCircle className="h-5 w-5 text-rose-600 dark:text-rose-400" />
             </div>
-          )}
+            <div>
+              <p className="font-bold text-rose-900 dark:text-rose-100">Payment action required</p>
+              <p className="mt-1 text-sm text-rose-700/80 dark:text-rose-300/80 leading-relaxed">
+                Your subscription is currently <strong>{payment.subscription_status}</strong>. 
+                Please update your payment method to avoid service interruption and maintain access to your reports.
+              </p>
+              {token && (
+                <div className="mt-5">
+                  <ManagePortalButton token={token} />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

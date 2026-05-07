@@ -29,35 +29,39 @@ const steps = [
 
 export default function HowItWorksSection(): JSX.Element {
   return (
-    <section className="px-4 py-16 sm:px-6" aria-labelledby="how-it-works-heading">
+    <section className="relative px-6 overflow-hidden" aria-labelledby="how-it-works-heading">
       <div className="mx-auto w-full max-w-6xl">
-        <div className="text-center">
-          <h2 id="how-it-works-heading" className="text-3xl font-semibold text-neutral-900">
-            How it works
+        <div className="mx-auto max-w-2xl text-center animate-glass-enter">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/05 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white/40 backdrop-blur-sm">
+            HOW IT WORKS
+          </span>
+          <h2 id="how-it-works-heading" className="mt-10 text-[38px] font-semibold tracking-tight text-white sm:text-[48px] leading-[1.1]">
+            Four agents. One pipeline.
           </h2>
-          <p className="mt-2 text-neutral-600">Four agents. One polished report.</p>
+          <p className="mt-6 text-[17px] leading-relaxed text-[var(--text-secondary)] sm:text-[19px] font-light">
+            Each step is visible and structured so the pipeline feels fast, transparent, and trustworthy.
+          </p>
         </div>
 
-        <div className="mt-12 grid gap-8 md:grid-cols-4 md:gap-6">
+        <div className="mt-24 grid gap-10 md:grid-cols-4">
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
-              <article key={step.name} className="relative pl-10 md:pl-0">
-                {index < steps.length - 1 ? (
-                  <>
-                    <div className="absolute left-[15px] top-9 h-full w-px bg-neutral-200 md:hidden" aria-hidden="true" />
-                    <div className="absolute left-[calc(50%+1.5rem)] top-4 hidden h-px w-[calc(100%-3rem)] bg-neutral-200 md:block" aria-hidden="true" />
-                  </>
-                ) : null}
-
-                <div className="absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white md:relative md:mx-auto md:mb-4">
+              <article key={step.name} className="relative group">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[16px] font-bold text-black shadow-[0_0_20px_rgba(255,255,255,0.2)] mb-8 md:mx-auto transition-transform group-hover:scale-110">
                   {index + 1}
                 </div>
 
-                <div className="rounded-xl border border-neutral-200 bg-white p-5 md:text-center">
-                  <Icon className="h-5 w-5 text-indigo-600 md:mx-auto" aria-hidden="true" />
-                  <h3 className="mt-3 text-lg font-semibold text-neutral-900">{step.name}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-600">{step.description}</p>
+                <div className="glass-card p-10 bg-white/[0.01] hover:bg-white/[0.04] transition-all duration-500 h-full md:text-center border-white/[0.05] hover:border-white/10">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.03] text-white border border-white/10 mb-8 md:mx-auto group-hover:scale-110 group-hover:bg-white group-hover:text-black transition-all duration-500">
+                    <Icon className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-[19px] font-semibold tracking-tight text-white">
+                    {step.name}
+                  </h3>
+                  <p className="mt-4 text-[15px] leading-relaxed text-[var(--text-secondary)] font-light">
+                    {step.description}
+                  </p>
                 </div>
               </article>
             );
@@ -67,3 +71,4 @@ export default function HowItWorksSection(): JSX.Element {
     </section>
   );
 }
+

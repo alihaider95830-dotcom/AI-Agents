@@ -8,6 +8,7 @@ interface InputProps {
   placeholder?: string;
   register: UseFormRegisterReturn;
   autoComplete?: string;
+  id?: string;
 }
 
 export const Input = ({
@@ -17,26 +18,27 @@ export const Input = ({
   placeholder,
   register,
   type = "text",
+  id,
 }: InputProps): JSX.Element => {
   return (
-    <label className="flex w-full flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-      <span>{label}</span>
+    <label className="flex w-full flex-col gap-2 text-[13px] font-medium text-[var(--text-secondary)]">
+      <span className="ml-1 uppercase tracking-wider text-[11px] text-[var(--text-tertiary)]">{label}</span>
       <input
         autoComplete={autoComplete}
         className={[
-          "h-11 rounded-xl border bg-white/90 px-3 text-sm text-slate-900 shadow-sm outline-none transition-all",
-          "placeholder:text-slate-400 focus:border-brand-ocean focus:ring-2 focus:ring-brand-ocean/20",
-          "dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100 dark:placeholder:text-slate-500",
+          "h-11 rounded-[var(--radius-md)] border border-[var(--border-input)] bg-[var(--glass-surface)] px-4 text-[14px] text-[var(--text-primary)] outline-none transition-all duration-200",
+          "placeholder:text-[var(--text-tertiary)] focus:border-white/30 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.06)]",
           error
-            ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20"
-            : "border-slate-200",
+            ? "border-red-500/40 focus:border-red-500/50 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.08)]"
+            : "",
         ].join(" ")}
         placeholder={placeholder}
+        id={id}
         type={type}
         {...register}
       />
       {error ? (
-        <span className="text-xs font-medium text-rose-500">{error}</span>
+        <span className="ml-1 text-[11px] font-medium text-red-400/80 uppercase tracking-tight">{error}</span>
       ) : null}
     </label>
   );

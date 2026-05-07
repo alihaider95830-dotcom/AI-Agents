@@ -1,6 +1,7 @@
 services:
   postgres:
-    image: postgres:15
+    image: pgvector/pgvector:pg16
+    platform: linux/amd64
     restart: unless-stopped
     ports:
       - "5432:5432"
@@ -13,11 +14,13 @@ services:
 
   redis:
     image: redis:7-alpine
+    platform: linux/amd64
     restart: unless-stopped
     ports:
       - "6379:6379"
 
   backend:
+    platform: linux/amd64
     build:
       context: ..
       dockerfile: studio/backend/Dockerfile
@@ -33,6 +36,7 @@ services:
       - redis
 
   worker:
+    platform: linux/amd64
     build:
       context: ..
       dockerfile: studio/workers/Dockerfile

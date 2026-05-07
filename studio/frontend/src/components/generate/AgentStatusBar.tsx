@@ -37,11 +37,11 @@ const stageOrder: Record<AgentStep["key"], number> = {
 
 const statusClasses: Record<AgentVisualStatus, string> = {
   waiting:
-    "border-slate-200 bg-white/80 text-slate-400 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-500",
+    "border-white/05 bg-white/02 text-[var(--text-tertiary)] opacity-50",
   active:
-    "border-sky-200 bg-sky-50 text-sky-700 animate-pulse dark:border-sky-900/80 dark:bg-sky-950/40 dark:text-sky-200",
+    "border-white/20 bg-white/08 text-white animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.05)]",
   complete:
-    "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/80 dark:bg-emerald-950/40 dark:text-emerald-200",
+    "border-white/10 bg-white/05 text-[var(--text-secondary)]",
 };
 
 const getAgentStatus = (
@@ -77,22 +77,23 @@ export const AgentStatusBar = ({
   const clampedProgress = Math.min(Math.max(progress_pct, 0), 100);
 
   return (
-    <section className="rounded-[1.75rem] border border-slate-200/70 bg-white/85 p-5 shadow-panel transition-all duration-300 dark:border-slate-800 dark:bg-slate-950/80">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <section className="glass-card p-8 bg-white/[0.02] border-white/[0.05] relative overflow-hidden glass-scanline">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between relative z-10">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-brand-ocean dark:text-brand-gold">
-            Agent pipeline
-          </p>
-          <h2 className="mt-2 font-[var(--font-heading)] text-2xl font-semibold text-slate-900 dark:text-white">
-            Live crew progress
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/05 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)] backdrop-blur-md">
+            <span className="h-1 w-1 rounded-full bg-white animate-pulse shadow-[0_0_8px_white]" />
+            LIVE_CREW_STREAM
+          </span>
+          <h2 className="mt-6 text-[22px] font-semibold tracking-tight text-white">
+            Operational Intelligence
           </h2>
         </div>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          {clampedProgress}% complete
+        <p className="text-[13px] font-bold font-mono text-[var(--text-tertiary)] uppercase tracking-widest opacity-60">
+          PROG_STATUS: <span className="text-white">{clampedProgress}%</span>
         </p>
       </div>
 
-      <div className="mt-6 grid gap-3 md:grid-cols-4">
+      <div className="mt-10 grid gap-4 md:grid-cols-4 relative z-10">
         {agentSteps.map((step) => {
           const Icon = step.icon;
           const visualStatus = getAgentStatus(step.key, currentStage);
@@ -101,43 +102,51 @@ export const AgentStatusBar = ({
             <article
               key={step.key}
               className={[
-                "relative rounded-2xl border p-4 transition-all duration-300",
+                "relative flex flex-col gap-4 rounded-[var(--radius-lg)] border p-6 transition-all duration-700",
                 statusClasses[visualStatus],
+                visualStatus === 'active' ? 'border-white/30 !bg-white/[0.08] shadow-[0_0_30px_rgba(255,255,255,0.05)]' : 'border-white/05'
               ].join(" ")}
             >
-              {visualStatus === "complete" ? (
-                <CheckCircle2 className="absolute right-3 top-3 h-5 w-5" />
-              ) : null}
-              <div className="flex items-start gap-3">
-                <div className="rounded-2xl bg-white/70 p-3 shadow-sm dark:bg-slate-900/80">
-                  <Icon className="h-5 w-5" />
+              <div className="flex items-center justify-between">
+                <div className={["rounded-[var(--radius-md)] p-2.5 transition-colors duration-500", visualStatus === 'active' ? 'bg-white text-black' : 'bg-white/05 text-[var(--text-tertiary)]'].join(" ")}>
+                  <Icon className="h-4 w-4" />
                 </div>
-                <div>
-                  <p className="font-semibold">{step.label}</p>
-                  <p
-                    className="mt-1 text-xs uppercase tracking-[0.22em]"
-                    data-testid={`agent-${step.label.toLowerCase()}-status`}
-                  >
-                    {visualStatus}
-                  </p>
-                </div>
+                {visualStatus === "complete" ? (
+                  <div className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-white/60" />
+                  </div>
+                ) : visualStatus === "active" ? (
+                  <span className="flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                  </span>
+                ) : null}
+              </div>
+              <div>
+                <p className={["text-[14px] font-bold tracking-tight transition-colors duration-500", visualStatus === 'active' ? 'text-white' : 'text-[var(--text-secondary)]'].join(" ")}>{step.label}</p>
+                <p
+                  data-testid={`agent-${step.key}-status`}
+                  className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] opacity-40 font-mono"
+                >
+                  [{visualStatus}]
+                </p>
               </div>
             </article>
           );
         })}
       </div>
 
-      <div className="mt-6">
-        <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-          <span>Progress</span>
-          <span>{clampedProgress}%</span>
+      <div className="mt-12 relative z-10">
+        <div className="mb-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--text-tertiary)] font-mono">
+          <span>PIPELINE_STABILITY</span>
+          <span className="text-white opacity-60">ACTIVE_FLOW</span>
         </div>
-        <progress
-          aria-label="Report progress"
-          className="h-3 w-full overflow-hidden rounded-full [appearance:none] [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-brand-ocean dark:[&::-moz-progress-bar]:bg-brand-gold [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-slate-200 dark:[&::-webkit-progress-bar]:bg-slate-800 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-brand-ocean dark:[&::-webkit-progress-value]:bg-brand-gold"
-          max={100}
-          value={clampedProgress}
-        />
+        <div className="h-1 w-full overflow-hidden rounded-full bg-white/05">
+          <div 
+            className="h-full bg-white transition-all duration-1000 ease-[var(--ease-out)] shadow-[0_0_20px_rgba(255,255,255,0.5)]" 
+            style={{ width: `${clampedProgress}%` }}
+          />
+        </div>
       </div>
     </section>
   );

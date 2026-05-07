@@ -25,33 +25,51 @@ export const StreamViewer = ({
   const hasContent = streamedText.trim().length > 0;
 
   return (
-    <section className="rounded-[1.75rem] border border-slate-200/70 bg-white/85 p-5 shadow-panel transition-all duration-300 dark:border-slate-800 dark:bg-slate-950/80">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <section className="glass-card p-8 bg-white/[0.02] border-white/[0.05] relative overflow-hidden glass-scanline">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between relative z-10">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-brand-ocean dark:text-brand-gold">
-            Live draft
-          </p>
-          <h2 className="mt-2 font-[var(--font-heading)] text-2xl font-semibold text-slate-900 dark:text-white">
-            Streaming report output
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/05 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)] backdrop-blur-sm">
+            LIVE_DRAFT_BUFFER
+          </span>
+          <h2 className="mt-6 text-[22px] font-semibold tracking-tight text-white">
+            Synthetic Report Stream
           </h2>
         </div>
-        {isComplete ? <Badge>Report complete ✓</Badge> : null}
+        {isComplete ? (
+          <div className="flex items-center gap-2.5 rounded-full bg-white px-5 py-2 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--text-inverse)] shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+            <span>READY_FOR_EXPORT</span>
+            <span>✓</span>
+          </div>
+        ) : isStreaming ? (
+          <div className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/05 px-5 py-2 text-[11px] font-bold uppercase tracking-[0.1em] text-white animate-pulse">
+            <span className="h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
+            INCOMING_DATA
+          </div>
+        ) : null}
       </div>
 
-      <div className="mt-6 max-h-[70vh] overflow-y-auto rounded-[1.5rem] border border-slate-200/80 bg-brand-sand/50 p-5 dark:border-slate-800 dark:bg-slate-950/70">
+      <div className="mt-8 max-h-[70vh] overflow-y-auto rounded-[var(--radius-xl)] border border-white/05 bg-black/40 p-8 sm:p-12 custom-scrollbar relative z-10 shadow-[inset_0_2px_20px_rgba(0,0,0,0.4)]">
         {!hasContent ? (
-          <div className="space-y-4" data-testid="stream-skeleton">
-            <div className="h-4 w-full animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
-            <div className="h-4 w-3/4 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
-            <div className="h-4 w-5/6 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
+          <div className="space-y-8" data-testid="stream-skeleton">
+            <div className="h-5 w-1/3 animate-pulse rounded-md bg-white/10" />
+            <div className="space-y-4">
+              <div className="h-3 w-full animate-pulse rounded-full bg-white/05" />
+              <div className="h-3 w-[95%] animate-pulse rounded-full bg-white/05" />
+              <div className="h-3 w-[90%] animate-pulse rounded-full bg-white/05" />
+            </div>
+            <div className="h-3 w-[40%] animate-pulse rounded-full bg-white/05" />
+            <div className="space-y-4 pt-4">
+              <div className="h-3 w-full animate-pulse rounded-full bg-white/05" />
+              <div className="h-3 w-[85%] animate-pulse rounded-full bg-white/05" />
+            </div>
           </div>
         ) : (
-          <div className="prose prose-slate prose-report max-w-none dark:prose-invert">
+          <div className="prose prose-zinc prose-report max-w-none dark:prose-invert">
             <ReactMarkdown>{streamedText}</ReactMarkdown>
             {isStreaming ? (
               <span
                 aria-label="Streaming cursor"
-                className="inline-block h-5 w-0.5 animate-pulse bg-brand-ocean align-middle dark:bg-brand-gold"
+                className="ml-1 inline-block h-5 w-1.5 animate-pulse rounded-full bg-white align-middle shadow-[0_0_12px_rgba(255,255,255,0.8)]"
               />
             ) : null}
           </div>

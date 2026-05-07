@@ -1,6 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 import { env } from "@/lib/env";
+import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { FinalReport, JobStatus } from "@/types/jobs";
 
 export interface User {
@@ -10,6 +11,42 @@ export interface User {
   tier: "free" | "pro" | "agency";
   credits: number;
 }
+
+export const DEMO_LOGIN_EMAIL = "demo@studio.local";
+export const DEMO_LOGIN_PASSWORD = "DemoPassword123!";
+export const DEMO_ACCESS_TOKEN = "demo-access-token";
+export const DEMO_USER: User = {
+  id: "demo-user",
+  email: DEMO_LOGIN_EMAIL,
+  full_name: "Demo User",
+  tier: "pro",
+  credits: 999,
+};
+
+export const isDemoLoginCredentials = (
+  email: string,
+  password: string,
+): boolean =>
+  email.trim().toLowerCase() === DEMO_LOGIN_EMAIL &&
+  password === DEMO_LOGIN_PASSWORD;
+
+const isPlaceholderSupabaseConfig = (): boolean => {
+  const url = env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  return (
+    url.includes("example.supabase.co") ||
+    url.includes("your-project.supabase.co") ||
+    anonKey === "supabase-anon-key" ||
+    anonKey === "replace_me"
+  );
+};
+
+const throwSupabaseSetupError = (): never => {
+  throw new Error(
+    "Supabase is not configured for this frontend yet. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to real Supabase project values, then restart the dev server.",
+  );
+};
 
 interface AuthResponse {
   access_token: string;
@@ -102,17 +139,37 @@ export const authApi = {
     full_name: string,
   ): Promise<{ access_token: string }> => {
     try {
-      const { data } = await api.post<AuthResponse>("/auth/register", {
+      if (isPlaceholderSupabaseConfig()) {
+        throwSupabaseSetupError();
+      }
+
+      const supabase = getBrowserSupabaseClient();
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        full_name,
+        options: {
+          data: {
+            full_name,
+          },
+        },
       });
 
-      return {
-        access_token: data.access_token,
-      };
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const access_token = data.session?.access_token;
+      if (!access_token) {
+        throw new Error(
+          "Account created, but no session was returned. Check your email and sign in again.",
+        );
+      }
+
+      return { access_token };
     } catch (error) {
-      throw new Error(extractApiErrorMessage(error));
+      throw new Error(
+        error instanceof Error ? error.message : "Something went wrong.",
+      );
     }
   },
   login: async (
@@ -120,16 +177,30 @@ export const authApi = {
     password: string,
   ): Promise<{ access_token: string }> => {
     try {
-      const { data } = await api.post<AuthResponse>("/auth/login", {
+      if (isPlaceholderSupabaseConfig()) {
+        throwSupabaseSetupError();
+      }
+
+      const supabase = getBrowserSupabaseClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      return {
-        access_token: data.access_token,
-      };
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const access_token = data.session?.access_token;
+      if (!access_token) {
+        throw new Error("Unable to create a session right now.");
+      }
+
+      return { access_token };
     } catch (error) {
-      throw new Error(extractApiErrorMessage(error));
+      throw new Error(
+        error instanceof Error ? error.message : "Something went wrong.",
+      );
     }
   },
   me: async (): Promise<User> => {
